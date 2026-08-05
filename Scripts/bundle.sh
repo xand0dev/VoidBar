@@ -60,6 +60,10 @@ if [ -f "$ROOT/Resources/AppIcon.icns" ]; then
     cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 fi
 
+echo "==> compiling media helper"
+clang -fobjc-arc -dynamiclib -o "$APP/Contents/Resources/libvoidmedia.dylib" \
+      "$ROOT/Sources/VoidBarMediaHelper/helper.m"
+
 # Таблицы строк кладутся прямо в бандл, а не через ресурсы SwiftPM: бандл здесь
 # собирается вручную, и .lproj рядом с исполняемым файлом — то, где их ищет сама
 # macOS. Язык она выбирает потом сама, по списку предпочитаемых у пользователя.
