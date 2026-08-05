@@ -1,0 +1,77 @@
+/* VoidBar — українська. Ключі — англійський текст, тому рядок без перекладу
+   просто залишиться англійським, а не перетвориться на ідентифікатор. */
+
+/* Вкладки */
+"Music" = "Музика";
+"Shelf" = "Полиця";
+"Clipboard" = "Буфер";
+"Snippets" = "Шаблони";
+"Calendar" = "Календар";
+"Translate" = "Переклад";
+
+/* Меню-бар */
+"Open Panel" = "Відкрити панель";
+"Launch at Login" = "Запускати при вході";
+"Save Clipboard Screenshots" = "Зберігати знімки екрана";
+"Show Screenshots Folder" = "Показати папку знімків";
+"Clear Screenshots Folder" = "Очистити папку знімків";
+"Clear Screenshots Folder (%@)" = "Очистити папку знімків (%@)";
+"Show Snippets File" = "Показати файл шаблонів";
+"Quit" = "Вийти";
+
+/* Полка */
+"Selected: %d" = "Вибрано: %d";
+"Deselect" = "Зняти вибір";
+"Clear" = "Очистити";
+"Copy" = "Копіювати";
+"Open" = "Відкрити";
+"Show in Finder" = "Показати у Finder";
+"Remove from Shelf" = "Прибрати з полиці";
+
+/* Музыка */
+"Nothing is playing" = "Нічого не грає";
+
+/* Заготовки */
+"Add a snippet" = "Додати шаблон";
+"Name" = "Назва";
+"Text" = "Текст";
+"Delete" = "Видалити";
+"Nothing here yet — add with +" = "Поки порожньо — додайте через +";
+
+/* Заметки */
+"Notes" = "Нотатки";
+"New Note" = "Нова нотатка";
+"Empty note" = "Порожня нотатка";
+"Jot something down…" = "Занотуйте що-небудь…";
+
+/* Перевод */
+"Translation Languages…" = "Мови перекладу…";
+"Retry" = "Повторити";
+"The %@ → %@ language pack is not installed." = "Не завантажено мовний пакет %@ → %@.";
+"macOS does not translate this pair of languages." = "macOS не перекладає цю пару мов.";
+
+/* Календарь */
+"Join" = "Приєднатися";
+"Join · %@" = "Приєднатися · %@";
+"No other meetings this week" = "Інших зустрічей цього тижня немає";
+"See your next meetings" = "Показати найближчі зустрічі";
+"VoidBar needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "Потрібен доступ до Календаря. Це єдиний дозвіл,\nякий запитує VoidBar — і лише для цієї вкладки.";
+"Allow" = "Дозволити";
+"Calendar access is off" = "Доступ до Календаря закрито";
+"Settings → Privacy → Calendars" = "Системні параметри → Приватність → Календарі";
+"No more meetings" = "Зустрічей більше немає";
+"Nothing on the calendar for the next day" = "Найближчої доби календар порожній";
+"Untitled" = "Без назви";
+
+/* Отсчёт со строчной */
+"now" = "триває зараз";
+"any moment" = "ось-ось";
+"tomorrow" = "завтра";
+"in %d min" = "за %d хв";
+"in %d h" = "за %d год";
+"in %d h %d min" = "за %d год %d хв";
+"in %d d" = "через %d дн";
+
+/* Сохранённые снимки. */
+"Screenshot" = "Знімок";
+"yyyy-MM-dd 'at' HH.mm.ss" = "yyyy-MM-dd 'о' HH.mm.ss";

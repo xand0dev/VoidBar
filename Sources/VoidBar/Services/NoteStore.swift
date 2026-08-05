@@ -1,0 +1,116 @@
+import AppKit
+
+struct Note: Identifiable, Codable, Equatable {
+    let id: UUID
+    var text: String
+    var edited: Date
+}
+
+/// Scratch notes: somewhere to put a thought down for an hour.
+///
+/// Deliberately not a notes app. No folders, no formatting, no search — for
+/// that there are real editors. This replaces the unsaved buffer people keep
+/// in one: a phone number from a call, half a link, a thought to come back to
+/// — written fast, then deleted or carried off through the clipboard.
+///
+/// Everything here is shaped by that shortness of life: notes are created
+/// empty and instantly, deleted in one click, and the blank ones sweep
+/// themselves out when the tab is left. The file they live in is an
+/// implementation detail — unlike the snippets file, nobody is expected to
+/// edit it by hand.
+@MainActor
+final class NoteStore: ObservableObject {
+    @Published private(set) var notes: [Note] = []
+    /// Which note the editor shows. Lives here rather than in the pane so the
+    /// choice survives the pane being unmounted with the panel.
+    @Published var selected: Note.ID?
+
+    // F-07 FIX: Use VoidBar directory.
+    private static let file: URL = {
+        let fm = FileManager.default
+        let folder = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("VoidBar", isDirectory: true)
+        try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder.appendingPathComponent("notes.json")
+    }()
+    
+    // F-07 FIX: Enforce 0600 file permissions on persist.
+    static func enforcePermissions() {
+        let attributes: [FileAttributeKey: Any] = [.posixPermissions: 0o600]
+        try? FileManager.default.setAttributes(attributes, ofItemAtPath: file.path)
+    }
+
+    private var saveWork: DispatchWorkItem?
+
+    init() {
+        load()
+    }
+
+    // MARK: - Editing
+
+    /// A new empty note, selected and ready to type into. Newest on top, and
+    /// the order never changes afterwards: a list that reshuffles itself on
+    /// every edit loses the reader's place for tidiness nobody asked for.
+    func add() {
+        let note = Note(id: UUID(), text: "", edited: Date())
+        notes.insert(note, at: 0)
+        selected = note.id
+        scheduleSave()
+    }
+
+    func update(_ id: Note.ID, text: String) {
+        guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
+        notes[index].text = text
+        notes[index].edited = Date()
+        scheduleSave()
+    }
+
+    func remove(_ id: Note.ID) {
+        notes.removeAll { $0.id == id }
+        if selected == id { selected = notes.first?.id }
+        scheduleSave()
+    }
+
+    /// Called when the user leaves the tab: notes that never got any text
+    /// sweep themselves out. They cost one hover to recreate, and a trail of
+    /// blank cards is exactly the clutter a scratchpad exists to avoid.
+    func leave() {
+        notes.removeAll { $0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        if let selected, !notes.contains(where: { $0.id == selected }) {
+            self.selected = notes.first?.id
+        }
+        flush()
+    }
+
+    // MARK: - Persistence
+
+    private func load() {
+        guard let data = try? Data(contentsOf: Self.file),
+              let stored = try? JSONDecoder().decode([Note].self, from: data) else { return }
+        notes = stored
+        selected = notes.first?.id
+    }
+
+    /// A moment after the typing pauses, not on every keystroke: the text
+    /// lives in memory either way, and the file only has to be right by the
+    /// time somebody could read it.
+    private func scheduleSave() {
+        saveWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            MainActor.assumeIsolated { self?.flush() }
+        }
+        saveWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: work)
+    }
+
+    func flush() {
+        saveWork?.cancel()
+        saveWork = nil
+        do {
+            try JSONEncoder().encode(notes).write(to: Self.file, options: .atomic)
+            Self.enforcePermissions()
+        } catch {
+            NSLog("VoidBar: cannot write notes.json: \(error.localizedDescription)")
+        }
+    }
+}

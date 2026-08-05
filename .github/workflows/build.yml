@@ -1,0 +1,58 @@
+name: build
+
+# Тестов в проекте нет, поэтому проверка ровно одна и честно названа: собирается
+# ли то, что лежит в main. Половина поломок в таком приложении — это сломанный
+# скрипт сборки бандла, а не код, поэтому гоняется весь путь до .app, а не
+# только swift build.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    # macOS 15 — минимум приложения: Translation.framework младше не бывает.
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Версия Swift
+        run: swift --version
+
+      - name: Сборка приложения
+        run: ./Scripts/bundle.sh release
+
+      - name: Проверить, что в бандле лежит то, что нужно
+        run: |
+          APP=build/Cyclop.app
+          VERSION="$(sed -n 's/^VERSION=//p' Scripts/version)"
+          test -x "$APP/Contents/MacOS/Cyclop"
+          # Локализации кладет тот же скрипт, и молча потерять их проще всего:
+          # приложение с пропавшей таблицей запускается и выглядит целым.
+          test -f "$APP/Contents/Resources/en.lproj/Localizable.strings"
+          test -f "$APP/Contents/Resources/ru.lproj/Localizable.strings"
+          INSIDE="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+          test "$INSIDE" = "$VERSION" || { echo "версия в бандле $INSIDE, в Scripts/version $VERSION"; exit 1; }
+
+      - name: Ключи перевода совпадают с кодом
+        # Строка, для которой нет ключа, не ломает сборку — она просто
+        # показывается идентификатором тому, у кого этот язык.
+        run: |
+          python3 - <<'PY'
+          import re, io, pathlib, sys
+          code = set()
+          for p in pathlib.Path("Sources").rglob("*.swift"):
+              code |= set(re.findall(r'localized\("([^"]+)"', io.open(p, encoding="utf-8").read()))
+          bad = False
+          for table in pathlib.Path("Resources").glob("*.lproj/Localizable.strings"):
+              text = io.open(table, encoding="utf-8").read()
+              keys = {k.replace("\\n", "\n") for k in re.findall(r'^"((?:[^"\\]|\\.)*)"\s*=', text, re.M)}
+              missing = code - keys
+              if missing:
+                  bad = True
+                  print(f"{table}: нет ключей: {sorted(missing)}")
+          sys.exit(1 if bad else 0)
+          PY

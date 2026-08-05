@@ -1,0 +1,15 @@
+.build/
+build/
+.DS_Store
+*.xcodeproj
+*.xcworkspace
+.swiftpm/
+
+# Чтобы секрет не уехал в публичный репозиторий по случайности
+.env
+.env.*
+*.pem
+*.p12
+*.key
+*.mobileprovision
+*.certSigningRequest
