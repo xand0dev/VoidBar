@@ -28,6 +28,11 @@ struct NotchContentView: View {
             }
             .frame(width: size.width, height: size.height, alignment: .top)
             .clipped()
+            
+            if !isOpen {
+                DynamicIslandView(vm: vm)
+                    .transition(.opacity)
+            }
         }
         .frame(width: size.width + 2 * topRadius, height: size.height, alignment: .top)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -96,6 +101,8 @@ struct NotchContentView: View {
             EmptyView()
         case .notes:
             NotesCounter(notes: vm.notes)
+        case .teleprompter:
+            EmptyView()
         }
     }
 
@@ -157,6 +164,8 @@ struct NotchContentView: View {
             TranslatePane(translator: vm.translator, wantsKeyboard: $vm.wantsKeyboard)
         case .notes:
             NotesPane(notes: vm.notes, wantsKeyboard: $vm.wantsKeyboard)
+        case .teleprompter:
+            TeleprompterPane(store: vm.teleprompter)
         }
     }
 }

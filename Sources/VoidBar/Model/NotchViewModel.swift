@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable {
-        case media, shelf, clipboard, snippets, calendar, translate, notes
+        case media, shelf, clipboard, snippets, calendar, translate, notes, teleprompter
         var id: String { rawValue }
 
         var symbol: String {
@@ -16,6 +16,7 @@ final class NotchViewModel: ObservableObject {
             case .calendar: return "calendar"
             case .translate: return "translate"
             case .notes: return "note.text"
+            case .teleprompter: return "text.line.first.and.arrowtriangle.forward"
             }
         }
 
@@ -28,19 +29,20 @@ final class NotchViewModel: ObservableObject {
             case .calendar: return localized("Calendar")
             case .translate: return localized("Translate")
             case .notes: return localized("Notes")
+            case .teleprompter: return localized("Teleprompter")
             }
         }
 
         /// Tabs with a field in them. Landing on one hands it the keyboard, so
         /// that arriving and typing is a single move.
-        var needsKeyboard: Bool { self == .translate || self == .snippets || self == .notes }
+        var needsKeyboard: Bool { self == .translate || self == .snippets || self == .notes || self == .teleprompter }
 
         /// Which rail the icon sits on. The left one carries the original six
         /// and is full — a seventh icon would outgrow the height the panel
         /// body has — so growth continues in a second column on the right,
         /// which the scratch notes open.
         static let leftRail: [Tab] = [.media, .shelf, .clipboard, .snippets, .calendar, .translate]
-        static let rightRail: [Tab] = [.notes]
+        static let rightRail: [Tab] = [.notes, .teleprompter]
     }
 
     @Published var isOpen = false
@@ -81,6 +83,7 @@ final class NotchViewModel: ObservableObject {
     let translator: Translator
     let snippets: SnippetStore
     let notes: NoteStore
+    let teleprompter: TeleprompterStore
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -93,6 +96,7 @@ final class NotchViewModel: ObservableObject {
         self.translator = Translator()
         self.snippets = SnippetStore()
         self.notes = NoteStore()
+        self.teleprompter = TeleprompterStore()
 
         // The panel header reads through to the stores — counters, the source
         // name, the equalizer. Nested ObservableObjects do not propagate on
@@ -183,6 +187,7 @@ final class NotchViewModel: ObservableObject {
         calendar.stop()
         // Whatever was typed makes it to disk even when quitting mid-thought.
         notes.flush()
+        teleprompter.flush()
     }
 
     func accept(urls: [URL]) -> Bool {

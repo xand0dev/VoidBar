@@ -23,12 +23,14 @@ struct NotchGeometry {
            let left = screen.auxiliaryTopLeftArea,
            let right = screen.auxiliaryTopRightArea {
             let width = screen.frame.width - left.width - right.width
-            return NotchGeometry(
-                screen: screen,
-                notchSize: CGSize(width: width, height: screen.safeAreaInsets.top),
-                notchCenterX: screen.frame.minX + left.width + width / 2,
-                isPhysical: true
-            )
+            if width > 0 {
+                return NotchGeometry(
+                    screen: screen,
+                    notchSize: CGSize(width: width, height: screen.safeAreaInsets.top),
+                    notchCenterX: screen.frame.minX + left.width + width / 2,
+                    isPhysical: true
+                )
+            }
         }
 
         // No notch: pretend there is one the size of a typical MacBook cutout so
