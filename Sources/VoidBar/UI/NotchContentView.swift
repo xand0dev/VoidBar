@@ -16,6 +16,7 @@ struct NotchContentView: View {
                 bottomRadius: isOpen ? Theme.openBottomRadius : Theme.collapsedBottomRadius
             )
             .fill(Color.black)
+            .opacity(!isOpen && !vm.geometry.isPhysical ? 0 : 1)
             .frame(width: size.width + 2 * topRadius, height: size.height)
             .shadow(color: .black.opacity(isOpen ? 0.5 : 0), radius: 18, y: 8)
 
