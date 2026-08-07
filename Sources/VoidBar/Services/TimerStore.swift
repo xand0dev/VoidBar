@@ -62,7 +62,6 @@ final class TimerStore: ObservableObject {
         notification.title = "Pomodoro Finished"
         notification.informativeText = "Time to take a break!"
         notification.soundName = NSUserNotificationDefaultSoundName
-        NSUserNotificationCenter.default.deliverNotification(notification)
-        HapticManager.play(.generic)
+        NSUserNotificationCenter.default.deliver(notification)
     }
 }

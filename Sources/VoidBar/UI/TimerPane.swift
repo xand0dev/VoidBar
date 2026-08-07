@@ -12,7 +12,6 @@ struct TimerPane: View {
             HStack(spacing: 30) {
                 Button {
                     timer.reset()
-                    HapticManager.play(.alignment)
                 } label: {
                     Image(systemName: "arrow.counterclockwise")
                         .font(.system(size: 20))
@@ -25,7 +24,6 @@ struct TimerPane: View {
                     } else {
                         timer.start()
                     }
-                    HapticManager.play(.alignment)
                 } label: {
                     Image(systemName: timer.state == .running ? "pause.fill" : "play.fill")
                         .font(.system(size: 24))
