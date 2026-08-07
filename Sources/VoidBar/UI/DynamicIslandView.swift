@@ -44,13 +44,15 @@ struct DynamicIslandView: View {
                 Text(vm.timer.formattedTime)
                     .font(.system(size: 10, weight: .medium).monospacedDigit())
                     .foregroundColor(Color.white)
-                    .padding(.leading, 10)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .padding(.leading, 8)
                 Spacer()
             }
-            .frame(width: 44, height: notchHeight)
+            .frame(width: 56, height: notchHeight)
             .background(Color.black)
             .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
-            .offset(x: notchWidth / 2 + 22 - 8)
+            .offset(x: notchWidth / 2 + 28 - 8)
         } else {
             HStack(spacing: 8) {
                 Image(systemName: "timer")
