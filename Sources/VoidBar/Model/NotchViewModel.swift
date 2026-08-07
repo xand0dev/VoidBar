@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable {
-        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather
+        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks
         var id: String { rawValue }
 
         var symbol: String {
@@ -20,6 +20,7 @@ final class NotchViewModel: ObservableObject {
             case .teleprompter: return "text.line.first.and.arrowtriangle.forward"
             case .monitor: return "cpu"
             case .weather: return "cloud.sun"
+            case .tasks: return "checkmark.circle"
             }
         }
 
@@ -36,6 +37,7 @@ final class NotchViewModel: ObservableObject {
             case .teleprompter: return localized("Teleprompter")
             case .monitor: return localized("Monitor")
             case .weather: return localized("Weather")
+            case .tasks: return localized("Tasks")
             }
         }
 
@@ -48,7 +50,7 @@ final class NotchViewModel: ObservableObject {
         /// body has — so growth continues in a second column on the right,
         /// which the scratch notes open.
         static let leftRail: [Tab] = [.media, .shelf, .clipboard, .snippets, .calendar, .timer, .translate]
-        static let rightRail: [Tab] = [.notes, .teleprompter, .monitor, .weather]
+        static let rightRail: [Tab] = [.notes, .tasks, .teleprompter, .monitor, .weather]
     }
 
     @Published var isOpen = false {
@@ -99,6 +101,7 @@ final class NotchViewModel: ObservableObject {
     let teleprompter: TeleprompterStore
     let monitor: SystemMonitorStore
     let weather: WeatherStore
+    let tickTick: TickTickStore
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -115,6 +118,7 @@ final class NotchViewModel: ObservableObject {
         self.teleprompter = TeleprompterStore()
         self.monitor = SystemMonitorStore()
         self.weather = WeatherStore()
+        self.tickTick = TickTickStore()
 
         // The panel header reads through to the stores — counters, the source
         // name, the equalizer. Nested ObservableObjects do not propagate on
@@ -154,7 +158,8 @@ final class NotchViewModel: ObservableObject {
             shelf.objectWillChange,
             clipboard.objectWillChange,
             calendar.objectWillChange,
-            monitor.objectWillChange
+            monitor.objectWillChange,
+            tickTick.objectWillChange
         ] {
             child
                 .sink { [weak self] _ in
