@@ -3,153 +3,120 @@ import SwiftUI
 struct DynamicIslandView: View {
     @ObservedObject var vm: NotchViewModel
     
-    // The width of the actual physical notch
     private var notchWidth: CGFloat { vm.geometry.notchSize.width }
-    // The height of the physical notch
     private var notchHeight: CGFloat { vm.geometry.notchSize.height }
-    
-    // Animation for equalizer
-    @State private var phase: CGFloat = 0
 
     var body: some View {
-        ZStack {
-            if vm.timer.state == .running {
-                timerPill
-            } else if vm.media.isPlaying {
-                mediaPill
-            } else if let weather = vm.weather.weather {
-                weatherPill(weather)
+        // Single right-side wing that merges with the notch edge.
+        // By placing the pill inside a wider-than-notch frame and aligning it
+        // to trailing, we guarantee it sits flush against the notch's right
+        // edge regardless of how wide the notch is on a given Mac.
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            
+            if pillKind != nil {
+                activePill
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
             }
         }
-        .frame(width: notchWidth, height: notchHeight) // Center aligns with notch
-        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.media.isPlaying || vm.timer.state == .running || vm.weather.weather != nil)
+        .frame(width: notchWidth + 120, height: notchHeight)
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: pillKind)
     }
 
-    @ViewBuilder
-    private var timerPill: some View {
-        if vm.geometry.isPhysical {
-            HStack {
-                Spacer()
-                Image(systemName: "timer")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(Theme.tertiary)
-                    .padding(.trailing, 10)
-            }
-            .frame(width: 44, height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
-            .offset(x: -notchWidth / 2 - 22 + 8)
+    // MARK: - Active Pill
 
-            HStack {
+    @ViewBuilder
+    private var activePill: some View {
+        switch pillKind {
+        case .timer:
+            pillBody {
+                Image(systemName: "timer")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundColor(Theme.tertiary)
                 Text(vm.timer.formattedTime)
-                    .font(.system(size: 10, weight: .medium).monospacedDigit())
-                    .foregroundColor(Color.white)
+                    .font(.system(size: 11, weight: .medium).monospacedDigit())
+                    .foregroundColor(.white)
                     .lineLimit(1)
                     .fixedSize()
-                    .padding(.leading, 8)
-                Spacer()
             }
-            .frame(width: 56, height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
-            .offset(x: notchWidth / 2 + 28 - 8)
-        } else {
-            HStack(spacing: 8) {
-                Image(systemName: "timer")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(Theme.tertiary)
-                Text(vm.timer.formattedTime)
-                    .font(.system(size: 10, weight: .medium).monospacedDigit())
-                    .foregroundColor(Color.white)
+        case .media:
+            pillBody {
+                EqualizerBars(isAnimating: true)
+                if vm.media.track != nil {
+                    Text(formatTime(vm.media.position))
+                        .font(.system(size: 11, weight: .medium).monospacedDigit())
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
             }
-            .padding(.horizontal, 12)
-            .frame(height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
+        case .weather:
+            if let w = vm.weather.weather {
+                pillBody {
+                    Image(systemName: weatherSymbol(for: w.condition))
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.white)
+                    Text(String(format: "%.0f°", w.temperature))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(.white)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+            }
+        case .none:
+            EmptyView()
         }
     }
 
-    @ViewBuilder
-    private var mediaPill: some View {
-        if vm.geometry.isPhysical {
-            // Left Wing (Equalizer / Icon)
-            HStack {
-                Spacer() // push to right edge of the left wing
-                EqualizerBars(isAnimating: true)
-                    .padding(.trailing, 10)
-            }
-            .frame(width: 44, height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
-            .offset(x: -notchWidth / 2 - 22 + 8) // Overlap slightly to merge with notch
-            
-            // Right Wing (Timer / Source)
-            HStack {
-                if vm.media.track != nil {
-                    Text(formatTime(vm.media.position))
-                        .font(.system(size: 10, weight: .medium).monospacedDigit())
-                        .foregroundColor(Color.white)
-                        .padding(.leading, 10)
-                }
-                Spacer()
-            }
-            .frame(width: 44, height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
-            .offset(x: notchWidth / 2 + 22 - 8)
-        } else {
-            // Unified Pill for non-notched screens
-            HStack(spacing: 8) {
-                EqualizerBars(isAnimating: true)
-                
-                if vm.media.track != nil {
-                    Text(formatTime(vm.media.position))
-                        .font(.system(size: 10, weight: .medium).monospacedDigit())
-                        .foregroundColor(Color.white)
-                }
-            }
-            .padding(.horizontal, 12)
-            .frame(height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
+    // MARK: - Shared Pill Chrome
+
+    private func pillBody<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        HStack(spacing: 6) {
+            content()
         }
+        .padding(.horizontal, 10)
+        .frame(height: notchHeight)
+        .background(Color.black)
+        .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
     }
-    
+
+    // MARK: - Pill Priority
+
+    private enum PillKind: Equatable {
+        case timer, media, weather
+    }
+
+    private var pillKind: PillKind? {
+        if vm.timer.state == .running { return .timer }
+        if vm.media.isPlaying { return .media }
+        if vm.weather.weather != nil { return .weather }
+        return nil
+    }
+
+    // MARK: - Helpers
+
     private func formatTime(_ seconds: Double) -> String {
         let mins = Int(seconds) / 60
         let secs = Int(seconds) % 60
         return String(format: "%d:%02d", mins, secs)
     }
 
-    @ViewBuilder
-    private func weatherPill(_ weather: WeatherData) -> some View {
-        if vm.geometry.isPhysical {
-            // Right Wing (Weather)
-            HStack {
-                Text(String(format: "%.0f°", weather.temperature))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color.white)
-                    .padding(.leading, 12)
-                Spacer()
-            }
-            .frame(width: 44, height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
-            .offset(x: notchWidth / 2 + 22 - 8)
-        } else {
-            // Unified Pill
-            HStack(spacing: 4) {
-                Image(systemName: "cloud.sun.fill")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.white)
-                Text(String(format: "%.0f°", weather.temperature))
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(Color.white)
-            }
-            .padding(.horizontal, 12)
-            .frame(height: notchHeight)
-            .background(Color.black)
-            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
+    private func weatherSymbol(for code: Int) -> String {
+        switch code {
+        case 0: return "sun.max.fill"
+        case 1, 2: return "cloud.sun.fill"
+        case 3: return "cloud.fill"
+        case 45, 48: return "cloud.fog.fill"
+        case 51...57: return "cloud.drizzle.fill"
+        case 61...67: return "cloud.rain.fill"
+        case 71...77: return "cloud.snow.fill"
+        case 80...82: return "cloud.heavyrain.fill"
+        case 85, 86: return "cloud.snow.fill"
+        case 95, 96, 99: return "cloud.bolt.fill"
+        default: return "cloud.sun.fill"
         }
     }
 }
