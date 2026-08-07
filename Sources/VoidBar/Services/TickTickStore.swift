@@ -64,7 +64,45 @@ final class TickTickStore: ObservableObject {
     }
     
     private func parseICal(_ ical: String) -> [TickTickTask] {
-        // To be implemented in next commit
-        return []
+        var tasks: [TickTickTask] = []
+        let lines = ical.components(separatedBy: .newlines)
+        
+        var currentId = ""
+        var currentTitle = ""
+        var isCompleted = false
+        var priority = 0
+        var inEvent = false
+        var dueDate: Date? = nil
+        
+        // Very basic iCal parser
+        for rawLine in lines {
+            let line = rawLine.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            if line == "BEGIN:VTODO" || line == "BEGIN:VEVENT" {
+                inEvent = true
+                currentId = UUID().uuidString // fallback
+                currentTitle = "Untitled Task"
+                isCompleted = false
+                priority = 0
+                dueDate = nil
+            } else if line == "END:VTODO" || line == "END:VEVENT" {
+                if inEvent {
+                    tasks.append(TickTickTask(id: currentId, title: currentTitle, isCompleted: isCompleted, dueDate: dueDate, priority: priority))
+                }
+                inEvent = false
+            } else if inEvent {
+                if line.hasPrefix("UID:") {
+                    currentId = String(line.dropFirst(4))
+                } else if line.hasPrefix("SUMMARY:") {
+                    currentTitle = String(line.dropFirst(8))
+                } else if line.hasPrefix("STATUS:COMPLETED") {
+                    isCompleted = true
+                } else if line.hasPrefix("PRIORITY:") {
+                    priority = Int(line.dropFirst(9)) ?? 0
+                }
+            }
+        }
+        
+        return tasks
     }
 }
