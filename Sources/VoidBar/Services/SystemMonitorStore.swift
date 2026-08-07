@@ -30,7 +30,7 @@ final class SystemMonitorStore: ObservableObject {
 
     private func poll() {
         pollCPU()
-        // Memory polling to be implemented
+        pollMemory()
     }
 
     private func pollCPU() {
@@ -78,5 +78,30 @@ final class SystemMonitorStore: ObservableObject {
         previousCPUInfoCnt = cpuInfoCnt
         previousTotalTicks = totalTicks
         previousIdleTicks = idleTicks
+    }
+
+    private func pollMemory() {
+        var stats = vm_statistics64()
+        var count = mach_msg_type_number_t(MemoryLayout<vm_statistics64_data_t>.size / MemoryLayout<integer_t>.size)
+
+        let result = withUnsafeMutablePointer(to: &stats) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                host_statistics64(mach_host_self(), HOST_VM_INFO64, $0, &count)
+            }
+        }
+
+        guard result == KERN_SUCCESS else { return }
+
+        let pageSize = UInt64(getpagesize())
+        let active = UInt64(stats.active_count) * pageSize
+        let wired = UInt64(stats.wire_count) * pageSize
+        let compressed = UInt64(stats.compressor_page_count) * pageSize
+
+        let usedMemory = Double(active + wired + compressed)
+        let totalMemory = Double(ProcessInfo.processInfo.physicalMemory)
+
+        if totalMemory > 0 {
+            self.memoryUsage = (usedMemory / totalMemory) * 100.0
+        }
     }
 }
