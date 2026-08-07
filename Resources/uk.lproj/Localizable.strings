@@ -9,6 +9,9 @@
 "Calendar" = "Календар";
 "Translate" = "Переклад";
 "Teleprompter" = "Суфлер";
+"Timer" = "Таймер";
+"Monitor" = "Монітор";
+"Weather" = "Погода";
 
 /* Меню-бар */
 "Open Panel" = "Відкрити панель";

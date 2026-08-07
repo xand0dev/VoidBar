@@ -9,6 +9,10 @@
 "Snippets" = "Snippets";
 "Calendar" = "Calendar";
 "Translate" = "Translate";
+"Teleprompter" = "Teleprompter";
+"Timer" = "Timer";
+"Monitor" = "Monitor";
+"Weather" = "Weather";
 
 /* Menu bar */
 "Open Panel" = "Open Panel";
