@@ -1,5 +1,6 @@
 import Foundation
 import Combine
+import AppKit
 
 @MainActor
 final class TimerStore: ObservableObject {
@@ -57,6 +58,11 @@ final class TimerStore: ObservableObject {
 
     private func finish() {
         reset()
-        // TODO: Trigger notification
+        let notification = NSUserNotification()
+        notification.title = "Pomodoro Finished"
+        notification.informativeText = "Time to take a break!"
+        notification.soundName = NSUserNotificationDefaultSoundName
+        NSUserNotificationCenter.default.deliverNotification(notification)
+        HapticManager.play(.generic)
     }
 }
