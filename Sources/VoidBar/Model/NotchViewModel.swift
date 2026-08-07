@@ -135,14 +135,26 @@ final class NotchViewModel: ObservableObject {
         // first letter typed is also the last one that lands. Their panes
         // observe them directly, and the header counter refreshes anyway,
         // because the list is only ever re-read on the way into the tab.
+        // Stores that power the Dynamic Island must always forward their
+        // changes — the island is visible when the panel is *closed*.
         for child in [
             media.objectWillChange,
+            timer.objectWillChange,
+            weather.objectWillChange
+        ] {
+            child
+                .sink { [weak self] _ in
+                    self?.objectWillChange.send()
+                }
+                .store(in: &cancellables)
+        }
+
+        // The remaining stores only matter when the panel is open.
+        for child in [
             shelf.objectWillChange,
             clipboard.objectWillChange,
             calendar.objectWillChange,
-            timer.objectWillChange,
-            monitor.objectWillChange,
-            weather.objectWillChange
+            monitor.objectWillChange
         ] {
             child
                 .sink { [weak self] _ in

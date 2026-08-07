@@ -22,7 +22,10 @@ struct DynamicIslandView: View {
                     ))
             }
         }
-        .frame(width: notchWidth + 120, height: notchHeight)
+        // Extra width so the pill can sit fully outside the notch area.
+        // The 6pt trailing padding keeps it clear of the notch's rounded corner.
+        .padding(.trailing, 6)
+        .frame(width: notchWidth + 140, height: notchHeight)
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: pillKind)
     }
 
