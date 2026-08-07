@@ -45,7 +45,13 @@ final class NotchViewModel: ObservableObject {
         static let rightRail: [Tab] = [.notes, .teleprompter]
     }
 
-    @Published var isOpen = false
+    @Published var isOpen = false {
+        didSet {
+            if isOpen != oldValue {
+                HapticManager.play(.alignment)
+            }
+        }
+    }
     @Published var isDropTargeted = false
     @Published var tab: Tab = .media {
         didSet {
