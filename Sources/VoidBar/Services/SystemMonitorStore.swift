@@ -5,6 +5,10 @@ import Combine
 final class SystemMonitorStore: ObservableObject {
     @Published var cpuUsage: Double = 0.0
     @Published var memoryUsage: Double = 0.0
+    
+    // Network speeds in bytes per second
+    @Published var networkDownloadSpeed: Double = 0.0
+    @Published var networkUploadSpeed: Double = 0.0
 
     private var timer: Timer?
 
@@ -27,10 +31,15 @@ final class SystemMonitorStore: ObservableObject {
     private var previousCPUInfoCnt: mach_msg_type_number_t = 0
     private var previousTotalTicks: Double = 0
     private var previousIdleTicks: Double = 0
+    
+    private var previousBytesIn: UInt64 = 0
+    private var previousBytesOut: UInt64 = 0
+    private var lastPollTime: Date = Date()
 
     private func poll() {
         pollCPU()
         pollMemory()
+        pollNetwork()
     }
 
     private func pollCPU() {
@@ -103,5 +112,45 @@ final class SystemMonitorStore: ObservableObject {
         if totalMemory > 0 {
             self.memoryUsage = (usedMemory / totalMemory) * 100.0
         }
+    }
+    
+    private func pollNetwork() {
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&ifaddr) == 0 else { return }
+        
+        var bytesIn: UInt64 = 0
+        var bytesOut: UInt64 = 0
+        
+        var ptr = ifaddr
+        while ptr != nil {
+            defer { ptr = ptr?.pointee.ifa_next }
+            let interface = ptr?.pointee
+            
+            // Look for interface link layer data (AF_LINK)
+            let addrFamily = interface?.ifa_addr.pointee.sa_family
+            if addrFamily == UInt8(AF_LINK) {
+                if let data = interface?.ifa_data {
+                    let networkData = data.assumingMemoryBound(to: if_data.self).pointee
+                    bytesIn += UInt64(networkData.ifi_ibytes)
+                    bytesOut += UInt64(networkData.ifi_obytes)
+                }
+            }
+        }
+        freeifaddrs(ifaddr)
+        
+        let now = Date()
+        let timeInterval = now.timeIntervalSince(lastPollTime)
+        
+        if previousBytesIn > 0 && previousBytesOut > 0 && timeInterval > 0 {
+            let inDiff = bytesIn > previousBytesIn ? bytesIn - previousBytesIn : 0
+            let outDiff = bytesOut > previousBytesOut ? bytesOut - previousBytesOut : 0
+            
+            self.networkDownloadSpeed = Double(inDiff) / timeInterval
+            self.networkUploadSpeed = Double(outDiff) / timeInterval
+        }
+        
+        self.previousBytesIn = bytesIn
+        self.previousBytesOut = bytesOut
+        self.lastPollTime = now
     }
 }
