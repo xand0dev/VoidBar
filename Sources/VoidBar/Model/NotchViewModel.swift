@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable {
-        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor
+        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather
         var id: String { rawValue }
 
         var symbol: String {
@@ -19,6 +19,7 @@ final class NotchViewModel: ObservableObject {
             case .notes: return "note.text"
             case .teleprompter: return "text.line.first.and.arrowtriangle.forward"
             case .monitor: return "cpu"
+            case .weather: return "cloud.sun"
             }
         }
 
@@ -34,6 +35,7 @@ final class NotchViewModel: ObservableObject {
             case .notes: return localized("Notes")
             case .teleprompter: return localized("Teleprompter")
             case .monitor: return localized("Monitor")
+            case .weather: return localized("Weather")
             }
         }
 
@@ -46,7 +48,7 @@ final class NotchViewModel: ObservableObject {
         /// body has — so growth continues in a second column on the right,
         /// which the scratch notes open.
         static let leftRail: [Tab] = [.media, .shelf, .clipboard, .snippets, .calendar, .timer, .translate]
-        static let rightRail: [Tab] = [.notes, .teleprompter, .monitor]
+        static let rightRail: [Tab] = [.notes, .teleprompter, .monitor, .weather]
     }
 
     @Published var isOpen = false {
@@ -96,6 +98,7 @@ final class NotchViewModel: ObservableObject {
     let notes: NoteStore
     let teleprompter: TeleprompterStore
     let monitor: SystemMonitorStore
+    let weather: WeatherStore
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -111,6 +114,7 @@ final class NotchViewModel: ObservableObject {
         self.notes = NoteStore()
         self.teleprompter = TeleprompterStore()
         self.monitor = SystemMonitorStore()
+        self.weather = WeatherStore()
 
         // The panel header reads through to the stores — counters, the source
         // name, the equalizer. Nested ObservableObjects do not propagate on
@@ -137,7 +141,8 @@ final class NotchViewModel: ObservableObject {
             clipboard.objectWillChange,
             calendar.objectWillChange,
             timer.objectWillChange,
-            monitor.objectWillChange
+            monitor.objectWillChange,
+            weather.objectWillChange
         ] {
             child
                 .sink { [weak self] _ in
@@ -180,6 +185,7 @@ final class NotchViewModel: ObservableObject {
         // never prompts on its own.
         calendar.start()
         monitor.start()
+        weather.start()
 
         // Screenshots reach the shelf through here whether they were taken on
         // this Mac or on a phone: a copy made on the phone arrives in the same
@@ -203,6 +209,7 @@ final class NotchViewModel: ObservableObject {
         clipboard.stop()
         calendar.stop()
         monitor.stop()
+        weather.stop()
         // Whatever was typed makes it to disk even when quitting mid-thought.
         notes.flush()
         teleprompter.flush()

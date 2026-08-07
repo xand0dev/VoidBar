@@ -112,6 +112,8 @@ struct NotchContentView: View {
             EmptyView()
         case .monitor:
             EmptyView()
+        case .weather:
+            EmptyView()
         }
     }
 
@@ -179,6 +181,8 @@ struct NotchContentView: View {
             TeleprompterPane(store: vm.teleprompter)
         case .monitor:
             MonitorPane(monitor: vm.monitor)
+        case .weather:
+            WeatherPane(weatherStore: vm.weather)
         }
     }
 }

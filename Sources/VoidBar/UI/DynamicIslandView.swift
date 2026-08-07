@@ -17,10 +17,12 @@ struct DynamicIslandView: View {
                 timerPill
             } else if vm.media.isPlaying {
                 mediaPill
+            } else if let weather = vm.weather.weather {
+                weatherPill(weather)
             }
         }
-        .frame(width: notchWidth, height: notchHeight)
-        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.media.isPlaying || vm.timer.state == .running)
+        .frame(width: notchWidth, height: notchHeight) // Center aligns with notch
+        .animation(.spring(response: 0.4, dampingFraction: 0.7), value: vm.media.isPlaying || vm.timer.state == .running || vm.weather.weather != nil)
     }
 
     @ViewBuilder
@@ -115,5 +117,37 @@ struct DynamicIslandView: View {
         let mins = Int(seconds) / 60
         let secs = Int(seconds) % 60
         return String(format: "%d:%02d", mins, secs)
+    }
+
+    @ViewBuilder
+    private func weatherPill(_ weather: WeatherData) -> some View {
+        if vm.geometry.isPhysical {
+            // Right Wing (Weather)
+            HStack {
+                Text(String(format: "%.0f°", weather.temperature))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color.white)
+                    .padding(.leading, 12)
+                Spacer()
+            }
+            .frame(width: 44, height: notchHeight)
+            .background(Color.black)
+            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
+            .offset(x: notchWidth / 2 + 22 - 8)
+        } else {
+            // Unified Pill
+            HStack(spacing: 4) {
+                Image(systemName: "cloud.sun.fill")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white)
+                Text(String(format: "%.0f°", weather.temperature))
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(Color.white)
+            }
+            .padding(.horizontal, 12)
+            .frame(height: notchHeight)
+            .background(Color.black)
+            .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
+        }
     }
 }
