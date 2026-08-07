@@ -141,13 +141,22 @@ struct MediaPane: View {
 
     private var controls: some View {
         HStack(spacing: 20) {
-            Button { media.previous() } label: { Image(systemName: "backward.fill") }
+            Button {
+                media.previous()
+                HapticManager.play(.alignment)
+            } label: { Image(systemName: "backward.fill") }
                 .buttonStyle(NotchButtonStyle(size: 30))
-            Button { media.togglePlayPause() } label: {
+            Button {
+                media.togglePlayPause()
+                HapticManager.play(.alignment)
+            } label: {
                 Image(systemName: media.isPlaying ? "pause.fill" : "play.fill")
             }
             .buttonStyle(NotchButtonStyle(size: 40, prominent: true))
-            Button { media.next() } label: { Image(systemName: "forward.fill") }
+            Button {
+                media.next()
+                HapticManager.play(.alignment)
+            } label: { Image(systemName: "forward.fill") }
                 .buttonStyle(NotchButtonStyle(size: 30))
         }
         .frame(maxWidth: .infinity)
