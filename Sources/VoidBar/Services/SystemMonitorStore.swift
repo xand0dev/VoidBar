@@ -23,7 +23,60 @@ final class SystemMonitorStore: ObservableObject {
         timer = nil
     }
 
+    private var previousCPUInfo: processor_info_array_t?
+    private var previousCPUInfoCnt: mach_msg_type_number_t = 0
+    private var previousTotalTicks: Double = 0
+    private var previousIdleTicks: Double = 0
+
     private func poll() {
-        // CPU and Memory polling to be implemented
+        pollCPU()
+        // Memory polling to be implemented
+    }
+
+    private func pollCPU() {
+        var cpuInfo: processor_info_array_t?
+        var cpuInfoCnt: mach_msg_type_number_t = 0
+        var cpuCount: natural_t = 0
+
+        let result = host_processor_info(mach_host_self(),
+                                         PROCESSOR_CPU_LOAD_INFO,
+                                         &cpuCount,
+                                         &cpuInfo,
+                                         &cpuInfoCnt)
+
+        guard result == KERN_SUCCESS, let cpuInfo = cpuInfo else { return }
+
+        var totalTicks: Double = 0
+        var idleTicks: Double = 0
+
+        for i in 0..<Int(cpuCount) {
+            let offset = i * Int(CPU_STATE_MAX)
+            let user = Double(cpuInfo[offset + Int(CPU_STATE_USER)])
+            let system = Double(cpuInfo[offset + Int(CPU_STATE_SYSTEM)])
+            let idle = Double(cpuInfo[offset + Int(CPU_STATE_IDLE)])
+            let nice = Double(cpuInfo[offset + Int(CPU_STATE_NICE)])
+
+            totalTicks += user + system + idle + nice
+            idleTicks += idle
+        }
+
+        if previousTotalTicks > 0 {
+            let totalDiff = totalTicks - previousTotalTicks
+            let idleDiff = idleTicks - previousIdleTicks
+
+            if totalDiff > 0 {
+                let usage = (1.0 - (idleDiff / totalDiff)) * 100.0
+                self.cpuUsage = max(0, min(100, usage))
+            }
+        }
+
+        if let prevInfo = previousCPUInfo {
+            vm_deallocate(mach_task_self_, vm_address_t(bitPattern: prevInfo), vm_size_t(previousCPUInfoCnt) * vm_size_t(MemoryLayout<integer_t>.size))
+        }
+
+        previousCPUInfo = cpuInfo
+        previousCPUInfoCnt = cpuInfoCnt
+        previousTotalTicks = totalTicks
+        previousIdleTicks = idleTicks
     }
 }
