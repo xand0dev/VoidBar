@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable {
-        case media, shelf, clipboard, snippets, calendar, translate, notes, teleprompter
+        case media, shelf, clipboard, snippets, calendar, translate, notes, teleprompter, monitor
         var id: String { rawValue }
 
         var symbol: String {
