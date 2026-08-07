@@ -210,6 +210,7 @@ private struct Rail: View {
             ForEach(tabs) { tab in
                 Button {
                     vm.select(tab)
+                    HapticManager.play(.alignment)
                 } label: {
                     Image(systemName: tab.symbol)
                         .font(.system(size: 12, weight: .medium))
@@ -246,6 +247,7 @@ private struct Rail: View {
             try? await Task.sleep(for: dwell)
             guard !Task.isCancelled else { return }
             vm.select(hovered)
+            HapticManager.play(.alignment)
         }
     }
 
