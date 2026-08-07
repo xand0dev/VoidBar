@@ -27,13 +27,13 @@ jobs:
 
       - name: Проверить, что в бандле лежит то, что нужно
         run: |
-          APP=build/Cyclop.app
+          APP=build/VoidBar.app
           VERSION="$(sed -n 's/^VERSION=//p' Scripts/version)"
-          test -x "$APP/Contents/MacOS/Cyclop"
+          test -x "$APP/Contents/MacOS/VoidBar"
           # Локализации кладет тот же скрипт, и молча потерять их проще всего:
           # приложение с пропавшей таблицей запускается и выглядит целым.
           test -f "$APP/Contents/Resources/en.lproj/Localizable.strings"
-          test -f "$APP/Contents/Resources/ru.lproj/Localizable.strings"
+          test -f "$APP/Contents/Resources/uk.lproj/Localizable.strings"
           INSIDE="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
           test "$INSIDE" = "$VERSION" || { echo "версия в бандле $INSIDE, в Scripts/version $VERSION"; exit 1; }
 
