@@ -222,15 +222,15 @@ private struct Rail: View {
     private let dwell = Duration.milliseconds(150)
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 2) {
             ForEach(tabs) { tab in
                 Button {
                     vm.select(tab)
                     HapticManager.play(.alignment)
                 } label: {
                     Image(systemName: tab.symbol)
-                        .font(.system(size: 12, weight: .medium))
-                        .frame(width: 30, height: 24)
+                        .font(.system(size: 11, weight: .medium))
+                        .frame(width: 28, height: 20)
                         .background(
                             RoundedRectangle(cornerRadius: 7, style: .continuous)
                                 .fill(fill(for: tab))
@@ -253,7 +253,7 @@ private struct Rail: View {
                 }
             }
         }
-        .frame(width: 30)
+        .frame(width: 28)
         .frame(maxHeight: .infinity, alignment: .center)
         .animation(Theme.contentAnimation, value: hovered)
         // Moving to another icon cancels the pending switch along with the
