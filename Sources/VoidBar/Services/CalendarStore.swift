@@ -31,8 +31,22 @@ final class CalendarStore: ObservableObject {
 
     @Published private(set) var access: Access = .notRequested
     @Published private(set) var meetings: [Meeting] = []
+    @Published private(set) var availableCalendars: [EKCalendar] = []
     /// Recomputed on a timer so the countdown in the header stays honest.
     @Published private(set) var now = Date()
+
+    var disabledCalendarIDs: Set<String> {
+        get {
+            if let array = UserDefaults.standard.stringArray(forKey: "disabledCalendarIDs") {
+                return Set(array)
+            }
+            return []
+        }
+        set {
+            UserDefaults.standard.set(Array(newValue), forKey: "disabledCalendarIDs")
+            reload()
+        }
+    }
 
     private let store = EKEventStore()
     private var timer: Timer?
@@ -156,11 +170,22 @@ final class CalendarStore: ObservableObject {
 
     func reload() {
         guard access == .granted else { return }
+        
+        availableCalendars = store.calendars(for: .event)
+        let disabled = disabledCalendarIDs
+        let activeCalendars = availableCalendars.filter { !disabled.contains($0.calendarIdentifier) }
+        
+        if activeCalendars.isEmpty && !availableCalendars.isEmpty {
+            meetings = []
+            now = Date()
+            return
+        }
+
         let start = Date()
         let predicate = store.predicateForEvents(
             withStart: start,
             end: start.addingTimeInterval(horizon),
-            calendars: nil
+            calendars: activeCalendars
         )
         meetings = store.events(matching: predicate)
             .filter { !$0.isAllDay && $0.status != .canceled }

@@ -10,10 +10,14 @@ struct CalendarPane: View {
         case .denied:
             deniedState
         case .granted:
-            if let next = calendar.next {
-                agenda(next: next)
-            } else {
-                emptyState
+            ZStack(alignment: .topTrailing) {
+                if let next = calendar.next {
+                    agenda(next: next)
+                } else {
+                    emptyState
+                }
+                
+                settingsMenu
             }
         }
     }
@@ -210,5 +214,37 @@ struct CalendarPane: View {
                 .foregroundStyle(Theme.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var settingsMenu: some View {
+        Menu {
+            ForEach(calendar.availableCalendars, id: \.calendarIdentifier) { cal in
+                Button {
+                    var disabled = calendar.disabledCalendarIDs
+                    if disabled.contains(cal.calendarIdentifier) {
+                        disabled.remove(cal.calendarIdentifier)
+                    } else {
+                        disabled.insert(cal.calendarIdentifier)
+                    }
+                    calendar.disabledCalendarIDs = disabled
+                } label: {
+                    HStack {
+                        if !calendar.disabledCalendarIDs.contains(cal.calendarIdentifier) {
+                            Image(systemName: "checkmark")
+                        }
+                        Text(cal.title)
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: "slider.horizontal.3")
+                .font(.system(size: 12))
+                .foregroundStyle(Theme.secondary)
+                .contentShape(Rectangle())
+        }
+        .menuStyle(.borderlessButton)
+        .frame(width: 24, height: 24)
+        .padding(.trailing, 0)
+        .padding(.top, -2)
     }
 }
