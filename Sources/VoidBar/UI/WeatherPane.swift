@@ -24,6 +24,19 @@ struct WeatherPane: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.secondary)
                 }
+                
+                if !weather.hourly.isEmpty {
+                    Spacer(minLength: 8)
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            ForEach(weather.hourly) { hour in
+                                hourlyItem(hour)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                    }
+                    .frame(height: 60)
+                }
             } else {
                 ProgressView()
                     .controlSize(.small)
@@ -43,6 +56,20 @@ struct WeatherPane: View {
         case 80...82: return "cloud.heavyrain.fill"
         case 95...99: return "cloud.bolt.rain.fill"
         default: return "cloud.fill"
+        }
+    }
+    
+    private func hourlyItem(_ hour: HourlyWeather) -> some View {
+        VStack(spacing: 4) {
+            Text(hour.time, format: .dateTime.hour())
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Theme.secondary)
+            Image(systemName: icon(for: hour.condition))
+                .font(.system(size: 14))
+                .foregroundStyle(.white)
+            Text(String(format: "%.0f°", hour.temperature))
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.white)
         }
     }
 }
