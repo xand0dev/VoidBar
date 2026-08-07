@@ -104,6 +104,8 @@ struct NotchContentView: View {
             NotesCounter(notes: vm.notes)
         case .teleprompter:
             EmptyView()
+        case .weather:
+            EmptyView()
         }
     }
 
@@ -167,6 +169,8 @@ struct NotchContentView: View {
             NotesPane(notes: vm.notes, wantsKeyboard: $vm.wantsKeyboard)
         case .teleprompter:
             TeleprompterPane(store: vm.teleprompter)
+        case .weather:
+            WeatherPane(weatherStore: vm.weather)
         }
     }
 }
