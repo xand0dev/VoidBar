@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable {
-        case media, shelf, clipboard, snippets, calendar, translate, notes, teleprompter
+        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter
         var id: String { rawValue }
 
         var symbol: String {
@@ -14,6 +14,7 @@ final class NotchViewModel: ObservableObject {
             case .clipboard: return "list.clipboard.fill"
             case .snippets: return "pin.fill"
             case .calendar: return "calendar"
+            case .timer: return "timer"
             case .translate: return "translate"
             case .notes: return "note.text"
             case .teleprompter: return "text.line.first.and.arrowtriangle.forward"
@@ -27,6 +28,7 @@ final class NotchViewModel: ObservableObject {
             case .clipboard: return localized("Clipboard")
             case .snippets: return localized("Snippets")
             case .calendar: return localized("Calendar")
+            case .timer: return localized("Timer")
             case .translate: return localized("Translate")
             case .notes: return localized("Notes")
             case .teleprompter: return localized("Teleprompter")
@@ -41,7 +43,7 @@ final class NotchViewModel: ObservableObject {
         /// and is full — a seventh icon would outgrow the height the panel
         /// body has — so growth continues in a second column on the right,
         /// which the scratch notes open.
-        static let leftRail: [Tab] = [.media, .shelf, .clipboard, .snippets, .calendar, .translate]
+        static let leftRail: [Tab] = [.media, .shelf, .clipboard, .snippets, .calendar, .timer, .translate]
         static let rightRail: [Tab] = [.notes, .teleprompter]
     }
 
@@ -82,6 +84,7 @@ final class NotchViewModel: ObservableObject {
     let calendar: CalendarStore
     let translator: Translator
     let snippets: SnippetStore
+    let timer: TimerStore
     let notes: NoteStore
     let teleprompter: TeleprompterStore
 
@@ -95,6 +98,7 @@ final class NotchViewModel: ObservableObject {
         self.calendar = CalendarStore()
         self.translator = Translator()
         self.snippets = SnippetStore()
+        self.timer = TimerStore()
         self.notes = NoteStore()
         self.teleprompter = TeleprompterStore()
 
@@ -122,6 +126,7 @@ final class NotchViewModel: ObservableObject {
             shelf.objectWillChange,
             clipboard.objectWillChange,
             calendar.objectWillChange,
+            timer.objectWillChange,
         ] {
             child
                 .sink { [weak self] _ in
