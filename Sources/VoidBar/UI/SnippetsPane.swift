@@ -257,6 +257,7 @@ private struct SnippetRow: View {
         .onHover { hovering = $0 }
         .onTapGesture {
             snippets.copy(item)
+            HapticManager.play(.generic)
             justCopied = true
             // Emptying the search lets go of the panel: nothing is being typed
             // any more, so nothing needs to hold it open.

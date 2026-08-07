@@ -48,6 +48,7 @@ struct CalendarPane: View {
                 if next.link != nil {
                     Button {
                         calendar.join(next)
+                        HapticManager.play(.alignment)
                     } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "video.fill").font(.system(size: 10))
