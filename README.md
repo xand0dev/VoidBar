@@ -24,6 +24,10 @@ VoidBar stays hidden until you hover over the notch area. When triggered, it gra
 - 📝 **Quick Notes & Snippets:** Keep a library of frequently used texts (like your email or phone number) and a scratchpad for quick, temporary notes.
 - 🗓️ **Meeting Tracker:** Connects to Calendar to show your next meeting and provides a one-click join button for Zoom, Teams, Meet, and others.
 - 🌍 **Offline Translator:** Built-in offline translation leveraging macOS's native `Translation.framework`.
+- ✅ **TickTick Integration:** Connects with an iCal link to manage and prioritize your daily tasks directly from the notch.
+- 🍅 **Pomodoro Timer:** Stay focused with built-in presets (5m, 10m, 25m, 50m) and a daily pomodoro completion tracker.
+- 📊 **System Monitor:** Keep an eye on your Mac's performance with CPU, Memory, and live Network speed stats.
+- ⛅️ **Weather:** View current local weather and a detailed 24-hour horizontal forecast.
 
 ## Installation & Setup
 
