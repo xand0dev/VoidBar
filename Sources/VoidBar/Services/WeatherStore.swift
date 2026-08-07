@@ -33,6 +33,41 @@ final class WeatherStore: ObservableObject {
     }
 
     private func fetchWeather() async {
-        // Fetch to be implemented
+        do {
+            // Get location via IP
+            guard let locationUrl = URL(string: "http://ip-api.com/json/") else { return }
+            let (locationData, _) = try await URLSession.shared.data(from: locationUrl)
+            
+            struct IPResponse: Decodable {
+                let lat: Double
+                let lon: Double
+                let city: String
+            }
+            let ipResponse = try JSONDecoder().decode(IPResponse.self, from: locationData)
+            
+            // Get weather from Open-Meteo
+            let weatherUrlString = "https://api.open-meteo.com/v1/forecast?latitude=\(ipResponse.lat)&longitude=\(ipResponse.lon)&current_weather=true"
+            guard let weatherUrl = URL(string: weatherUrlString) else { return }
+            
+            let (weatherJsonData, _) = try await URLSession.shared.data(from: weatherUrl)
+            
+            struct MeteoResponse: Decodable {
+                struct CurrentWeather: Decodable {
+                    let temperature: Double
+                    let weathercode: Int
+                }
+                let current_weather: CurrentWeather
+            }
+            let meteoResponse = try JSONDecoder().decode(MeteoResponse.self, from: weatherJsonData)
+            
+            self.weather = WeatherData(
+                temperature: meteoResponse.current_weather.temperature,
+                condition: meteoResponse.current_weather.weathercode,
+                locationName: ipResponse.city
+            )
+            self.error = nil
+        } catch {
+            self.error = error.localizedDescription
+        }
     }
 }
