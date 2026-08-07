@@ -96,6 +96,12 @@ struct NotchContentView: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(next.isRunning ? Color.white.opacity(0.8) : Theme.tertiary)
             }
+        case .timer:
+            if vm.timer.state != .idle {
+                Text(vm.timer.formattedTime)
+                    .font(.system(size: 10, weight: .medium).monospacedDigit())
+                    .foregroundStyle(vm.timer.state == .running ? Color.white.opacity(0.8) : Theme.tertiary)
+            }
         case .translate:
             // Nothing: the columns name both languages already, and the strip
             // is the one part of the panel worth not spending on a repeat.
@@ -159,6 +165,8 @@ struct NotchContentView: View {
             ClipboardPane(clipboard: vm.clipboard)
         case .calendar:
             CalendarPane(calendar: vm.calendar)
+        case .timer:
+            TimerPane(timer: vm.timer)
         case .snippets:
             SnippetsPane(snippets: vm.snippets, wantsKeyboard: $vm.wantsKeyboard)
         case .translate:
