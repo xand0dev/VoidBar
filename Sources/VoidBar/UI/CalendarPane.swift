@@ -163,7 +163,7 @@ struct CalendarPane: View {
             Text("See your next meetings")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(Theme.secondary)
-            Text("VoidBar needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab.")
+            Text("VoidBar needs Calendar access for this tab. Other features\nmay request their own permissions when used.")
                 .font(.system(size: 10))
                 .foregroundStyle(Theme.tertiary)
                 .multilineTextAlignment(.center)

@@ -25,7 +25,6 @@ final class NoteStore: ObservableObject {
     /// choice survives the pane being unmounted with the panel.
     @Published var selected: Note.ID?
 
-    // F-07 FIX: Use VoidBar directory.
     private static let file: URL = {
         let fm = FileManager.default
         let folder = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
@@ -34,7 +33,6 @@ final class NoteStore: ObservableObject {
         return folder.appendingPathComponent("notes.json")
     }()
     
-    // F-07 FIX: Enforce 0600 file permissions on persist.
     static func enforcePermissions() {
         let attributes: [FileAttributeKey: Any] = [.posixPermissions: 0o600]
         try? FileManager.default.setAttributes(attributes, ofItemAtPath: file.path)

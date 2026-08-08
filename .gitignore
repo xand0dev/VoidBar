@@ -5,7 +5,7 @@ build/
 *.xcworkspace
 .swiftpm/
 
-# Чтобы секрет не уехал в публичный репозиторий по случайности
+# Common local secrets and signing material
 .env
 .env.*
 *.pem

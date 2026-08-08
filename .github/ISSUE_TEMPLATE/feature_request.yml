@@ -1,0 +1,41 @@
+name: Feature request
+description: Propose an improvement to VoidBar
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for the idea. Please describe the problem before prescribing an implementation.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What workflow is difficult today, and who experiences it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the smallest useful outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Mention workarounds or different approaches you considered.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Privacy, permissions, and performance
+      description: Would this add a network service, permission, background work, or stored data?
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched for an existing issue or discussion.
+          required: true
+        - label: I am willing to help implement or test this feature.
+          required: false

@@ -13,6 +13,10 @@ final class NotchController {
     /// Monotonic stamp for the deferred half of closing: any newer open or
     /// close outdates the one still in flight.
     private var openGeneration = 0
+    
+    var tabManager: TabManager? {
+        viewModel?.tabManager
+    }
 
     func install() {
         build()

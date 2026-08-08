@@ -36,37 +36,35 @@ struct MonitorPane: View {
                     .frame(width: 40, height: 40)
             }
             .padding(.horizontal, 16)
-        }
-        .padding(.vertical, 16)
-        
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Network")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(Theme.secondary)
-                
-                HStack(spacing: 12) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.down.circle.fill")
-                            .foregroundStyle(Theme.tertiary)
-                        Text(formatSpeed(monitor.networkDownloadSpeed))
-                            .font(.system(size: 14, weight: .medium).monospacedDigit())
-                            .foregroundStyle(.white)
-                    }
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Network")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Theme.secondary)
                     
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .foregroundStyle(Theme.tertiary)
-                        Text(formatSpeed(monitor.networkUploadSpeed))
-                            .font(.system(size: 14, weight: .medium).monospacedDigit())
-                            .foregroundStyle(.white)
+                    HStack(spacing: 12) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .foregroundStyle(Theme.tertiary)
+                            Text(formatSpeed(monitor.networkDownloadSpeed))
+                                .font(.system(size: 14, weight: .medium).monospacedDigit())
+                                .foregroundStyle(.white)
+                        }
+                        
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .foregroundStyle(Theme.tertiary)
+                            Text(formatSpeed(monitor.networkUploadSpeed))
+                                .font(.system(size: 14, weight: .medium).monospacedDigit())
+                                .foregroundStyle(.white)
+                        }
                     }
                 }
+                Spacer()
             }
-            Spacer()
+            .padding(.horizontal, 16)
         }
-        .padding(.horizontal, 16)
-        .padding(.bottom, 16)
+        .padding(.vertical, 16)
     }
     
     private func formatSpeed(_ bytesPerSecond: Double) -> String {

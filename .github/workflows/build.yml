@@ -1,58 +1,83 @@
 name: build
 
-# Тестов в проекте нет, поэтому проверка ровно одна и честно названа: собирается
-# ли то, что лежит в main. Половина поломок в таком приложении — это сломанный
-# скрипт сборки бандла, а не код, поэтому гоняется весь путь до .app, а не
-# только swift build.
 on:
   push:
     branches: [main]
-    paths-ignore: ['**.md', 'docs/**']
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
   pull_request:
     branches: [main]
   workflow_dispatch:
 
-jobs:
-  build:
-    # macOS 15 — минимум приложения: Translation.framework младше не бывает.
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v5
+permissions:
+  contents: read
 
-      - name: Версия Swift
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    name: Test and build app
+    runs-on: macos-15
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Show Swift version
         run: swift --version
 
-      - name: Сборка приложения
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build release app bundle
         run: ./Scripts/bundle.sh release
 
-      - name: Проверить, что в бандле лежит то, что нужно
+      - name: Validate app bundle
+        shell: bash
         run: |
-          APP=build/VoidBar.app
+          set -euo pipefail
+          APP="build/VoidBar.app"
           VERSION="$(sed -n 's/^VERSION=//p' Scripts/version)"
+
           test -x "$APP/Contents/MacOS/VoidBar"
-          # Локализации кладет тот же скрипт, и молча потерять их проще всего:
-          # приложение с пропавшей таблицей запускается и выглядит целым.
+          test -f "$APP/Contents/Resources/AppIcon.icns"
           test -f "$APP/Contents/Resources/en.lproj/Localizable.strings"
           test -f "$APP/Contents/Resources/uk.lproj/Localizable.strings"
-          INSIDE="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
-          test "$INSIDE" = "$VERSION" || { echo "версия в бандле $INSIDE, в Scripts/version $VERSION"; exit 1; }
 
-      - name: Ключи перевода совпадают с кодом
-        # Строка, для которой нет ключа, не ломает сборку — она просто
-        # показывается идентификатором тому, у кого этот язык.
+          INSIDE="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+          test "$INSIDE" = "$VERSION" || {
+            echo "Bundle version $INSIDE does not match Scripts/version $VERSION"
+            exit 1
+          }
+
+      - name: Validate localization keys
         run: |
           python3 - <<'PY'
-          import re, io, pathlib, sys
+          import io
+          import pathlib
+          import re
+          import sys
+
           code = set()
-          for p in pathlib.Path("Sources").rglob("*.swift"):
-              code |= set(re.findall(r'localized\("([^"]+)"', io.open(p, encoding="utf-8").read()))
-          bad = False
+          for path in pathlib.Path("Sources").rglob("*.swift"):
+              source = io.open(path, encoding="utf-8").read()
+              code |= set(re.findall(r'localized\("([^"]+)"', source))
+
+          invalid = False
           for table in pathlib.Path("Resources").glob("*.lproj/Localizable.strings"):
-              text = io.open(table, encoding="utf-8").read()
-              keys = {k.replace("\\n", "\n") for k in re.findall(r'^"((?:[^"\\]|\\.)*)"\s*=', text, re.M)}
+              source = io.open(table, encoding="utf-8").read()
+              keys = {
+                  key.replace("\\n", "\n")
+                  for key in re.findall(r'^"((?:[^"\\]|\\.)*)"\s*=', source, re.M)
+              }
               missing = code - keys
               if missing:
-                  bad = True
-                  print(f"{table}: нет ключей: {sorted(missing)}")
-          sys.exit(1 if bad else 0)
+                  invalid = True
+                  print(f"{table}: missing keys: {sorted(missing)}")
+
+          sys.exit(1 if invalid else 0)
           PY

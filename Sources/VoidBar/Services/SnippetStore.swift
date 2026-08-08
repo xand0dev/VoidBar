@@ -48,18 +48,16 @@ final class SnippetStore: ObservableObject {
     }
 
     /// `~/Library/Application Support/VoidBar/snippets.json`. A plain array of
-    /// `{"label": "...", "text": "..."}`, where `label` may be left out.
-    // F-07 FIX: Use VoidBar directory.
+    /// the texts. The order is preserved. `label` may be left out.
     static let file: URL = {
         let fm = FileManager.default
-        let folder = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        let folder = try! FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             .appendingPathComponent("VoidBar", isDirectory: true)
         try? fm.createDirectory(at: folder, withIntermediateDirectories: true)
         let fileURL = folder.appendingPathComponent("snippets.json")
         return fileURL
     }()
     
-    // F-07 FIX: Enforce 0600 file permissions on persist.
     static func enforcePermissions() {
         let attributes: [FileAttributeKey: Any] = [.posixPermissions: 0o600]
         try? FileManager.default.setAttributes(attributes, ofItemAtPath: file.path)

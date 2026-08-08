@@ -4,7 +4,7 @@ struct WeatherPane: View {
     @ObservedObject var weatherStore: WeatherStore
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 4) {
             if let error = weatherStore.error {
                 Text(error)
                     .font(.system(size: 11, weight: .medium))
@@ -12,11 +12,11 @@ struct WeatherPane: View {
                     .multilineTextAlignment(.center)
             } else if let weather = weatherStore.weather {
                 Image(systemName: icon(for: weather.condition))
-                    .font(.system(size: 36, weight: .light))
+                    .font(.system(size: 32, weight: .light))
                     .foregroundStyle(.white)
                 
                 Text(String(format: "%.1f°", weather.temperature))
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(.white)
                 
                 if let location = weather.locationName {
@@ -26,7 +26,6 @@ struct WeatherPane: View {
                 }
                 
                 if !weather.hourly.isEmpty {
-                    Spacer(minLength: 8)
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             ForEach(weather.hourly) { hour in
@@ -35,7 +34,7 @@ struct WeatherPane: View {
                         }
                         .padding(.horizontal, 16)
                     }
-                    .frame(height: 60)
+                    .frame(height: 50)
                 }
             } else {
                 ProgressView()
@@ -43,7 +42,7 @@ struct WeatherPane: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.vertical, 16)
+        .padding(.vertical, 8)
     }
     
     private func icon(for code: Int) -> String {
