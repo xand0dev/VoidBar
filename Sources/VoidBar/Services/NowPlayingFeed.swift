@@ -12,12 +12,20 @@ final class NowPlayingFeed {
         var duration: TimeInterval = 0
         var elapsed: TimeInterval = 0
         var rate: Double = 0
+        /// Instant to which `elapsed` belongs. MediaRemote does not advance the
+        /// stored number continuously; callers must project it using `rate`.
+        var timestamp: Date?
         /// Only present on the update where the track changed.
         var artwork: Data?
         /// Name of the app owning the session, resolved from its pid.
         var source: String?
 
         var isEmpty: Bool { title.isEmpty }
+
+        func projectedElapsed(at now: Date = Date()) -> TimeInterval {
+            guard rate > 0, let timestamp else { return elapsed }
+            return elapsed + max(0, now.timeIntervalSince(timestamp)) * rate
+        }
     }
 
     enum Command: Int {
@@ -156,6 +164,9 @@ final class NowPlayingFeed {
         snapshot.duration = object["duration"] as? Double ?? 0
         snapshot.elapsed = object["elapsed"] as? Double ?? 0
         snapshot.rate = object["rate"] as? Double ?? 0
+        if let timestamp = object["timestamp"] as? Double, timestamp > 0 {
+            snapshot.timestamp = Date(timeIntervalSince1970: timestamp)
+        }
         if let base64 = object["artwork"] as? String {
             snapshot.artwork = Data(base64Encoded: base64)
         }

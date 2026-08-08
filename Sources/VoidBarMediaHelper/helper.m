@@ -63,6 +63,14 @@ static void publish(void) {
             out[@"duration"] = info[@"kMRMediaRemoteNowPlayingInfoDuration"] ?: @0;
             out[@"elapsed"] = info[@"kMRMediaRemoteNowPlayingInfoElapsedTime"] ?: @0;
             out[@"rate"] = info[@"kMRMediaRemoteNowPlayingInfoPlaybackRate"] ?: @0;
+            NSDate *timestamp = info[@"kMRMediaRemoteNowPlayingInfoTimestamp"];
+            if ([timestamp isKindOfClass:NSDate.class]) {
+                // MediaRemote's elapsed value belongs to this instant, not to
+                // the moment `publish` reads the dictionary. Without the
+                // timestamp every manual refresh appears to seek backwards to
+                // the last system update.
+                out[@"timestamp"] = @(timestamp.timeIntervalSince1970);
+            }
             out[@"pid"] = @(sOwnerPID);
 
             NSString *artworkID = info[@"kMRMediaRemoteNowPlayingInfoArtworkIdentifier"] ?: title;
