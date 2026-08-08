@@ -14,6 +14,10 @@ All notable changes to VoidBar are documented in this file. The format follows [
 - CI now runs unit tests as well as the full application bundle build.
 - Privacy documentation now describes every intentional remote request, persisted data category, and system permission.
 
+### Fixed
+
+- Opening the notch no longer resets the displayed media position to the last stale MediaRemote update.
+
 ## [0.5.1] - 2026-08-05
 
 ### Fixed
