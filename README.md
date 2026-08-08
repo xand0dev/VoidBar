@@ -31,7 +31,9 @@ No Electron. No account. No project backend. Just SwiftUI, AppKit, and macOS.
 
 ## See it in motion
 
-![Hovering over the MacBook notch opens VoidBar](docs/assets/hover-demo.gif)
+A live product tour: open the notch, control music, start a focus timer, translate text, and move on.
+
+![VoidBar live product tour showing music controls, a focus timer, and instant translation](docs/assets/hover-demo.gif)
 
 The panel is not a second desktop. It is a short interaction: hover, do the thing, move on. Tabs can be reordered or hidden, so the rail only keeps what belongs in your workflow.
 
