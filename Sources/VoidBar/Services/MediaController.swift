@@ -114,6 +114,7 @@ final class MediaController: ObservableObject {
     private func apply(_ snapshot: NowPlayingFeed.Snapshot) {
         guard !snapshot.isEmpty else { return clear() }
 
+        let elapsed = snapshot.projectedElapsed()
         let key = "\(snapshot.title)|\(snapshot.artist)|\(snapshot.album)"
         track = Track(title: snapshot.title, artist: snapshot.artist, album: snapshot.album, key: key)
         isPlaying = snapshot.isPlaying || snapshot.rate > 0
@@ -123,14 +124,14 @@ final class MediaController: ObservableObject {
         // A player needs a moment to act on a seek, and until it does it keeps
         // reporting the old position. Accepting that would yank the bar back.
         if let pending = pendingSeek {
-            let settled = abs(snapshot.elapsed - pending.target) < 2.5
+            let settled = abs(elapsed - pending.target) < 2.5
             let expired = Date().timeIntervalSince(pending.at) > 1.5
             if settled || expired {
                 pendingSeek = nil
-                adopt(snapshot.elapsed)
+                adopt(elapsed)
             }
         } else {
-            adopt(snapshot.elapsed)
+            adopt(elapsed)
         }
         updateTicker()
 
