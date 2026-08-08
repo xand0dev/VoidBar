@@ -43,6 +43,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         toggle.target = self
         menu.addItem(toggle)
 
+        let prefs = NSMenuItem(
+            title: localized("Preferences..."),
+            action: #selector(openPreferences),
+            keyEquivalent: ","
+        )
+        prefs.target = self
+        menu.addItem(prefs)
+
         let login = NSMenuItem(
             title: localized("Launch at Login"),
             action: #selector(toggleLaunchAtLogin),
@@ -101,6 +109,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func togglePanel() {
         controller?.toggle()
+    }
+    
+    @objc private func openPreferences() {
+        if let tabManager = controller?.tabManager {
+            SettingsWindowController.shared.show(tabManager: tabManager)
+        }
     }
 
     /// The size is measured when the menu opens, not kept fresh in between: a

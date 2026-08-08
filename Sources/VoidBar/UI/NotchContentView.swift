@@ -136,9 +136,9 @@ struct NotchContentView: View {
 
     private var content: some View {
         HStack(spacing: 14) {
-            Rail(vm: vm, tabs: NotchViewModel.Tab.leftRail)
+            Rail(vm: vm, tabs: vm.tabManager.leftRail)
             panes
-            Rail(vm: vm, tabs: NotchViewModel.Tab.rightRail)
+            Rail(vm: vm, tabs: vm.tabManager.rightRail)
         }
         .padding(.horizontal, 14)
         .padding(.bottom, 14)

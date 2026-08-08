@@ -3,7 +3,7 @@ import Combine
 
 @MainActor
 final class NotchViewModel: ObservableObject {
-    enum Tab: String, CaseIterable, Identifiable {
+    enum Tab: String, CaseIterable, Identifiable, Codable {
         case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks
         var id: String { rawValue }
 
@@ -45,13 +45,9 @@ final class NotchViewModel: ObservableObject {
         /// that arriving and typing is a single move.
         var needsKeyboard: Bool { self == .translate || self == .snippets || self == .notes || self == .teleprompter }
 
-        /// Which rail the icon sits on. The left one carries the original six
-        /// and is full — a seventh icon would outgrow the height the panel
-        /// body has — so growth continues in a second column on the right,
-        /// which the scratch notes open.
-        static let leftRail: [Tab] = [.media, .shelf, .clipboard, .snippets, .calendar, .timer, .translate]
-        static let rightRail: [Tab] = [.notes, .tasks, .teleprompter, .monitor, .weather]
     }
+
+    @Published var tabManager = TabManager()
 
     @Published var isOpen = false {
         didSet {
