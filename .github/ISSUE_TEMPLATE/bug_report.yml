@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a reproducible problem in VoidBar
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve VoidBar. Search existing issues first. For a security vulnerability, stop here and follow `SECURITY.md` instead.
+  - type: input
+    id: version
+    attributes:
+      label: VoidBar version or commit
+      description: Use the app version from the menu bar or a commit SHA for a source build.
+      placeholder: v0.5.1 or 3ee37ac
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS and Mac model
+      placeholder: macOS 15.6, MacBook Pro 14-inch (M3 Pro)
+    validations:
+      required: true
+  - type: dropdown
+    id: build
+    attributes:
+      label: Installation method
+      options:
+        - Built from source
+        - GitHub release
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Select …
+        3. Observe …
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Logs, screenshots, or recordings
+      description: Remove private clipboard, calendar, file path, and TickTick URL data before uploading.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched for an existing issue.
+          required: true
+        - label: This report does not disclose a security vulnerability or private data.
+          required: true

@@ -1,6 +1,6 @@
 import Foundation
 import Combine
-import AppKit
+import UserNotifications
 
 @MainActor
 final class TimerStore: ObservableObject {
@@ -35,6 +35,7 @@ final class TimerStore: ObservableObject {
 
     func start() {
         checkNewDay()
+        requestNotificationAccess()
         if state == .idle {
             timeRemaining = selectedDuration
         }
@@ -85,11 +86,30 @@ final class TimerStore: ObservableObject {
         defaults.set(lastCompletionDate, forKey: "pomodoroLastDate")
         
         reset()
-        let notification = NSUserNotification()
-        notification.title = "Pomodoro Finished"
-        notification.informativeText = "Time to take a break! You have completed \(completedToday) today."
-        notification.soundName = "Glass"
-        NSUserNotificationCenter.default.deliver(notification)
+        deliverCompletionNotification()
+    }
+
+    private func requestNotificationAccess() {
+        Task {
+            _ = try? await UNUserNotificationCenter.current()
+                .requestAuthorization(options: [.alert, .sound])
+        }
+    }
+
+    private func deliverCompletionNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Pomodoro Finished"
+        content.body = "Time to take a break! You have completed \(completedToday) today."
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: "voidbar.pomodoro.\(UUID().uuidString)",
+            content: content,
+            trigger: nil
+        )
+        Task {
+            try? await UNUserNotificationCenter.current().add(request)
+        }
     }
     
     private func checkNewDay() {

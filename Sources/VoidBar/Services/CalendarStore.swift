@@ -3,9 +3,8 @@ import EventKit
 
 /// Today's meetings, and the link that joins the next one.
 ///
-/// Access is requested only when the user first opens the calendar tab: it is
-/// the one permission VoidBar needs at all, and nobody should be asked for it
-/// just because the app launched.
+/// Access is requested only after the user presses the button in the Calendar
+/// pane. Nobody should be asked for it just because the app launched.
 @MainActor
 final class CalendarStore: ObservableObject {
     enum Access {

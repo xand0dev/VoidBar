@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/xand0dev/VoidBar/security/advisories/new
+    about: Report security issues privately; do not open a public issue.
+  - name: Usage question or idea
+    url: https://github.com/xand0dev/VoidBar/discussions
+    about: Ask for help or discuss an idea before turning it into an issue.

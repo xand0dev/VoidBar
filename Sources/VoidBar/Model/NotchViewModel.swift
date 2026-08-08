@@ -61,9 +61,13 @@ final class NotchViewModel: ObservableObject {
         didSet {
             // Opening the tab only re-checks the status. The permission prompt
             // is the user's own press on the button inside the pane: this is
-            // the one permission VoidBar asks for at all, and it deserves an
-            // explanation before the system dialog, not after.
+            // Calendar deserves an explanation before the system dialog, not
+            // after, so switching tabs only refreshes the current status.
             if tab == .calendar { calendar.refreshAccess() }
+            // Weather reveals an approximate location through the public IP.
+            // Do not make that request merely because the app launched; the
+            // first visit to the pane is the user's explicit opt-in.
+            if tab == .weather { weather.start() }
             // The snippets file is edited from outside the app, so it is read
             // on the way in rather than held from launch.
             if tab == .snippets { snippets.reload() }
@@ -198,7 +202,6 @@ final class NotchViewModel: ObservableObject {
         // never prompts on its own.
         calendar.start()
         monitor.start()
-        weather.start()
 
         // Screenshots reach the shelf through here whether they were taken on
         // this Mac or on a phone: a copy made on the phone arrives in the same

@@ -1,26 +1,24 @@
-## Description
+## Summary
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context.
+<!-- What changed, and why? Keep this focused on the user or contributor problem. -->
 
-Fixes # (issue)
+Fixes #
 
-## Type of change
+## Validation
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
+<!-- List automated tests and manual checks. Include screenshots or recordings for visible UI changes. -->
 
-## How Has This Been Tested?
+- [ ] `swift test`
+- [ ] `./Scripts/bundle.sh release`
+- [ ] Tested the affected flow on macOS 15+
 
-Please describe the tests that you ran to verify your changes. 
-- [ ] Tested locally on macOS 15+
-- [ ] Verify there are no visual glitches or overlaps in the UI
+## Impact
 
-## Checklist:
+- [ ] No new network request, permission, or persisted data
+- [ ] Privacy/security documentation updated if behavior changed
+- [ ] English and Ukrainian localization updated if user-facing text changed
+- [ ] No unrelated changes are included
 
-- [ ] My code follows the style guidelines of this project
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have made corresponding changes to the documentation (if applicable)
-- [ ] My changes generate no new warnings in Xcode
+## Notes
+
+<!-- Tradeoffs, follow-up work, migration notes, or anything reviewers should know. -->

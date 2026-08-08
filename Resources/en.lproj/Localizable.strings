@@ -13,9 +13,11 @@
 "Timer" = "Timer";
 "Monitor" = "Monitor";
 "Weather" = "Weather";
+"Tasks" = "Tasks";
 
 /* Menu bar */
 "Open Panel" = "Open Panel";
+"Preferences..." = "Preferences...";
 "Launch at Login" = "Launch at Login";
 "Save Clipboard Screenshots" = "Save Clipboard Screenshots";
 "Show Screenshots Folder" = "Show Screenshots Folder";
@@ -60,7 +62,7 @@
 "Join · %@" = "Join · %@";
 "No other meetings this week" = "No other meetings this week";
 "See your next meetings" = "See your next meetings";
-"VoidBar needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "VoidBar needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab.";
+"VoidBar needs Calendar access for this tab. Other features\nmay request their own permissions when used." = "VoidBar needs Calendar access for this tab. Other features\nmay request their own permissions when used.";
 "Allow" = "Allow";
 "Calendar access is off" = "Calendar access is off";
 "Settings → Privacy → Calendars" = "Settings → Privacy → Calendars";

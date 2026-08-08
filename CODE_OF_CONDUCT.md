@@ -59,7 +59,10 @@ representative at an online or offline event.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the community leaders responsible for enforcement.
+reported to the project owner through the contact options on the
+[@xand0dev GitHub profile](https://github.com/xand0dev). If a private contact
+method is unavailable, use a GitHub Security Advisory and state that the report
+concerns community safety rather than a software vulnerability.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

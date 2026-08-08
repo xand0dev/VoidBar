@@ -1,49 +1,31 @@
-# Безопасность
+# Security Policy
 
-## Как сообщить об уязвимости
+## Supported versions
 
-Через [Security Advisories](https://github.com/xand0dev/voidbar/security/advisories/new)
-на GitHub — это приватный канал, issue заводить не нужно. Ответ придёт, когда придёт:
-проект личный, дежурства по нему нет.
+Until the first public binary release, security fixes are applied to the `main` branch. After releases begin, only the latest published version will be supported unless a release note says otherwise.
 
-## Поверхность атаки
+## Report a vulnerability
 
-Её практически нет, и это осознанно.
+Please report suspected vulnerabilities privately through [GitHub Security Advisories](https://github.com/xand0dev/VoidBar/security/advisories/new). Do not open a public issue for an undisclosed vulnerability.
 
-VoidBar не открывает портов, не слушает сеть и не ходит в неё. Ни одного сетевого
-соединения приложение не устанавливает вовсе — ни для обновлений, ни для
-телеметрии, ни для чего-либо ещё. Всё, что оно делает, происходит на одной машине
-между процессами, которые и так принадлежат пользователю.
+Include, when possible:
 
-Снимок с айфона попадает на полку через универсальный буфер обмена, то есть
-средствами самой macOS: передачу выполняет Continuity, она зашифрована и
-подтверждена Apple ID, а VoidBar лишь читает то, что оказалось в буфере. Своего
-канала связи с телефоном у него нет.
+- the affected version or commit;
+- reproduction steps and the expected impact;
+- relevant logs, screenshots, or a minimal proof of concept;
+- whether the issue has already been disclosed elsewhere.
 
-## Разрешения
+This is a volunteer-maintained project with no guaranteed response SLA. The maintainer will acknowledge a valid report when available, investigate it, and coordinate disclosure before publishing a fix.
 
-Одно, и только по нажатию кнопки: доступ к Календарю на вкладке «Календарь».
-Ни автоматизации, ни универсального доступа, ни записи экрана в обычном режиме
-работы не требуется. Не открываешь календарь — приложение живёт вообще без
-разрешений.
+## Security boundaries
 
-Автоматизация и универсальный доступ запрашиваются только запасным путём для
-управления плеером, если основной перестанет работать.
+VoidBar does not expose a listening network service or operate a project backend. It does make outbound requests for weather, configured TickTick feeds, and allow-listed Spotify artwork. See [PRIVACY.md](PRIVACY.md) for the complete network, storage, and permission map.
 
-## Что VoidBar читает и где это лежит
+The TickTick iCal subscription URL may contain a secret token and is stored in macOS preferences. Reports involving exposed personal URLs, credentials, or other private data should be sanitized before sharing.
 
-**История буфера обмена** живёт только в памяти процесса и не пишется на диск.
-Записи с типом `org.nspasteboard.ConcealedType`, которым менеджеры паролей
-помечают свои копирования, в историю не попадают вовсе.
+## Out of scope
 
-**Снимки экрана из буфера** сохраняются файлами в `~/Pictures/VoidBar` и не
-удаляются автоматически никогда. Папка целиком принадлежит пользователю; чистит
-её только он. Отключается пунктом меню-бара.
-
-**Полка** хранит в настройках приложения пути к файлам, а не сами файлы.
-
-**Заготовки** читаются из `~/Library/Application Support/VoidBar/snippets.json`.
-Файл только читается, никогда не записывается.
-
-**Перевод** выполняется `Translation.framework` полностью офлайн: текст не
-покидает машину.
+- Gatekeeper warnings caused solely by locally built, ad-hoc-signed binaries;
+- vulnerabilities in macOS or a third-party service without a VoidBar-specific impact;
+- social engineering, spam, denial-of-service testing, or destructive testing;
+- reports produced only by automated scanners without a reproducible impact.

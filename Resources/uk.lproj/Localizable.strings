@@ -12,9 +12,11 @@
 "Timer" = "Таймер";
 "Monitor" = "Монітор";
 "Weather" = "Погода";
+"Tasks" = "Завдання";
 
 /* Меню-бар */
 "Open Panel" = "Відкрити панель";
+"Preferences..." = "Налаштування...";
 "Launch at Login" = "Запускати при вході";
 "Save Clipboard Screenshots" = "Зберігати знімки екрана";
 "Show Screenshots Folder" = "Показати папку знімків";
@@ -59,7 +61,7 @@
 "Join · %@" = "Приєднатися · %@";
 "No other meetings this week" = "Інших зустрічей цього тижня немає";
 "See your next meetings" = "Показати найближчі зустрічі";
-"VoidBar needs access to Calendar. It is the only permission\nthe app asks for, and only for this tab." = "Потрібен доступ до Календаря. Це єдиний дозвіл,\nякий запитує VoidBar — і лише для цієї вкладки.";
+"VoidBar needs Calendar access for this tab. Other features\nmay request their own permissions when used." = "VoidBar потрібен доступ до Календаря для цієї вкладки. Інші функції\nможуть попросити окремі дозволи, коли ви ними скористаєтеся.";
 "Allow" = "Дозволити";
 "Calendar access is off" = "Доступ до Календаря закрито";
 "Settings → Privacy → Calendars" = "Системні параметри → Приватність → Календарі";

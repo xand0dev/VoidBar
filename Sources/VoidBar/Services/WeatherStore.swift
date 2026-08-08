@@ -1,14 +1,14 @@
 import Foundation
 import Combine
 
-struct HourlyWeather: Codable, Identifiable {
+struct HourlyWeather: Identifiable {
     let id = UUID()
     let time: Date
     let temperature: Double
     let condition: Int
 }
 
-struct WeatherData: Codable {
+struct WeatherData {
     let temperature: Double
     let condition: Int
     let locationName: String?

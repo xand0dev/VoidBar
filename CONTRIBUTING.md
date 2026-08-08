@@ -1,42 +1,67 @@
 # Contributing to VoidBar
 
-Thank you for your interest in contributing to VoidBar! We welcome contributions of all kinds: bug reports, feature requests, and pull requests.
+Thanks for helping improve VoidBar. Bug reports, feature proposals, documentation, localization, tests, and code changes are all welcome.
 
-## Development Setup
+## Before you start
 
-To build and run VoidBar locally, you will need:
-- A Mac running **macOS 15** or later.
-- The **Swift 6** toolchain (via Xcode 16+).
+- Search existing issues before opening a new one.
+- Use GitHub Discussions for broad ideas or usage questions when Discussions are available.
+- Open an issue before investing in a large feature or architectural change so the direction can be agreed on first.
+- Never include clipboard contents, calendar data, private TickTick URLs, credentials, or other personal data in an issue or test fixture.
+- Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/xand0dev/voidbar.git
-   cd voidbar
-   ```
+Security vulnerabilities must be reported privately as described in [SECURITY.md](SECURITY.md).
 
-2. Build the project:
-   VoidBar uses a custom build script that handles compilation, assembling the bundle, compiling the media helper, localization, and ad-hoc signing.
-   ```bash
-   ./Scripts/bundle.sh
-   ```
+## Development setup
 
-3. Run the app:
-   ```bash
-   open build/VoidBar.app
-   ```
+You need macOS 15 or later and Xcode 16+ (or another Swift 6 toolchain).
 
-## Pull Request Process
+```bash
+git clone https://github.com/xand0dev/VoidBar.git
+cd VoidBar
+swift test
+./Scripts/bundle.sh
+open build/VoidBar.app
+```
 
-1. **Fork the repository** and create your branch from `main`.
-2. **Ensure it builds**: Run `./Scripts/bundle.sh` locally and verify the app opens and works without crashing.
-3. **Check Code Style**: Try to follow the existing code style in the project. VoidBar uses Swift formatting conventions.
-4. **Test your changes**: Please test your feature or bug fix manually since the project heavily relies on AppKit and SwiftUI UI components.
-5. **Open a PR**: Fill out the provided Pull Request template.
+`Scripts/bundle.sh` compiles the Swift package and Objective-C media helper, assembles the app bundle, copies resources, and applies an ad-hoc signature. Build output is written to `.build/` and `build/`; neither directory should be committed.
 
-## Issues
+## Project map
 
-- Before opening an issue, please check if a similar issue already exists.
-- Use the provided Issue Templates for bug reports and feature requests.
-- Provide as much context as possible, including OS version and screenshots.
+- `Sources/VoidBar/App` — app lifecycle, menu bar, and preferences window.
+- `Sources/VoidBar/Notch` — panel lifecycle, geometry, shape, and pointer handling.
+- `Sources/VoidBar/Model` — shared application and tab state.
+- `Sources/VoidBar/Services` — feature state, persistence, system APIs, and remote requests.
+- `Sources/VoidBar/UI` — SwiftUI panes and shared visual components.
+- `Sources/VoidBarMediaHelper` — Objective-C helper for system media state.
+- `Resources` — app icon and localized strings.
+- `Tests/VoidBarTests` — unit tests.
 
-We are excited to see what you build!
+## Making a change
+
+1. Fork the repository and branch from `main`.
+2. Keep each pull request focused on one logical change.
+3. Follow the existing Swift and SwiftUI style; explain non-obvious system behavior in comments.
+4. Add or update tests for logic that can be exercised outside the UI.
+5. Add localization keys to both `Resources/en.lproj/Localizable.strings` and `Resources/uk.lproj/Localizable.strings`.
+6. Update README, privacy documentation, or release notes when behavior changes.
+7. Run the checks below before opening a pull request.
+
+```bash
+swift test
+./Scripts/bundle.sh release
+```
+
+For UI changes, also launch the built app and verify the panel on the relevant display configuration. Include a screenshot or short recording in the pull request when the visual change is meaningful.
+
+## Pull requests
+
+Fill in the pull request template and describe:
+
+- the problem and why the change is needed;
+- the implementation and important tradeoffs;
+- automated and manual validation;
+- privacy, permission, persistence, localization, and performance effects;
+- related issues using `Fixes #123` when applicable.
+
+Maintainers may ask for a smaller scope, additional tests, or documentation before merging. By contributing, you agree that your work is licensed under the repository's [MIT License](LICENSE).
