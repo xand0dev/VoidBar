@@ -1,53 +1,77 @@
-# VoidBar
+<h1 align="center">VoidBar</h1>
 
 <p align="center">
-  <strong>A native productivity hub for the MacBook notch.</strong><br>
-  Media controls, file shelf, clipboard history, notes, calendar, translation, Pomodoro, weather, and more — one hover away.
+  <strong>Your MacBook notch, finally useful.</strong><br>
+  A fast, native macOS command shelf that stays invisible until you need it.
 </p>
 
 <p align="center">
   <a href="https://github.com/xand0dev/VoidBar/actions/workflows/build.yml"><img alt="Build" src="https://github.com/xand0dev/VoidBar/actions/workflows/build.yml/badge.svg"></a>
-  <a href="https://github.com/xand0dev/VoidBar/blob/main/LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/xand0dev/VoidBar"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/xand0dev/VoidBar?color=white"></a>
   <img alt="macOS 15+" src="https://img.shields.io/badge/macOS-15%2B-black?logo=apple">
   <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white">
 </p>
 
-<p align="center"><a href="README.uk.md">Українська</a></p>
+<p align="center">
+  <a href="#see-it-in-motion">Demo</a> ·
+  <a href="#what-lives-inside">Features</a> ·
+  <a href="#build-it">Build</a> ·
+  <a href="#privacy-without-hand-waving">Privacy</a> ·
+  <a href="README.uk.md">Українська</a>
+</p>
 
-![VoidBar media controls inside the MacBook notch](docs/panel.png)
+![VoidBar running inside a MacBook display notch](docs/assets/social-preview.png)
 
-VoidBar stays out of sight until you hover over the notch, then opens a compact panel of native macOS tools. Move away and it collapses again. It is built in Swift with SwiftUI and AppKit, has no third-party runtime dependencies, and includes English and Ukrainian localization.
+VoidBar turns the unused space around the MacBook notch into a focused set of everyday tools: media controls, a temporary file shelf, clipboard history, notes, translation, meetings, Pomodoro, weather, and more. It opens on hover, closes when you leave, and never asks you to organize another window.
 
-> [!IMPORTANT]
-> VoidBar is in active development. Public, notarized binary releases are not available yet; build it from source using the instructions below.
+No Electron. No account. No project backend. Just SwiftUI, AppKit, and macOS.
 
-## Features
+> [!NOTE]
+> VoidBar is under active development. Public notarized binaries are not available yet; the app can be built locally in one command.
 
-| Tool | What it does |
-| --- | --- |
-| Media | Controls Apple Music, Spotify, and compatible system media sessions, with track progress and artwork. |
-| File shelf | Holds file references while you switch between apps and supports drag-in/drag-out workflows. |
-| Clipboard | Keeps the latest 40 text, link, file, and image entries in memory while VoidBar runs. |
-| Screenshots | Saves copied images to `~/Pictures/VoidBar` and places them on the shelf; this can be disabled. |
-| Snippets | Stores reusable text, links, email addresses, and phone numbers in an editable JSON file. |
-| Calendar | Shows upcoming meetings and opens Zoom, Google Meet, Teams, and other safe meeting links. |
-| Notes | Provides a fast, persistent scratchpad for temporary thoughts. |
-| Teleprompter | Keeps scrolling reference text close at hand. |
-| Translation | Uses Apple's native Translation framework, with no custom translation service. |
-| Pomodoro | Offers 5, 10, 25, and 50 minute presets and tracks completed sessions for the day. |
-| System monitor | Displays CPU, memory, upload, and download activity. |
-| Weather | Shows current conditions and the next 24 hours using IP-based location and Open-Meteo. |
-| TickTick | Reads tasks from a user-provided TickTick iCal subscription URL. |
+## See it in motion
 
-Tabs can be reordered, hidden, and restored from Preferences. VoidBar can also launch at login and works from a menu bar control on Macs without a display notch.
+![Hovering over the MacBook notch opens VoidBar](docs/assets/hover-demo.gif)
 
-## Requirements
+The panel is not a second desktop. It is a short interaction: hover, do the thing, move on. Tabs can be reordered or hidden, so the rail only keeps what belongs in your workflow.
 
-- macOS 15 Sequoia or later
-- Xcode 16+ or another Swift 6 toolchain
-- A MacBook notch is optional
+## What lives inside
 
-## Build from source
+### Move things
+
+- **Media** — system Now Playing, Apple Music, Spotify, and browser sessions with artwork, progress, seeking, and transport controls.
+- **Shelf** — park files in the notch, switch apps, then drag them out where they belong.
+- **Clipboard** — the latest 40 text, link, file, and image entries, kept in memory while VoidBar runs.
+
+### Keep focus
+
+- **Pomodoro** — 5, 10, 25, and 50 minute sessions with a daily completion count.
+- **Notes** — a persistent scratchpad for thoughts that do not deserve a document yet.
+- **Snippets** — searchable reusable text stored in a human-editable JSON file.
+- **Teleprompter** — scrolling reference text without another window covering your work.
+
+### Stay oriented
+
+- **Calendar** — upcoming meetings and safe one-click links for Meet, Zoom, Teams, and more.
+- **Translation** — Apple's native Translation framework instead of a custom cloud service.
+- **Weather** — current conditions and 24 hours ahead through Open-Meteo.
+- **TickTick** — tasks from your private TickTick iCal subscription.
+- **System monitor** — CPU, memory, upload, and download activity at a glance.
+
+![VoidBar media controller with YouTube Music](docs/assets/media.png)
+
+## Designed like a Mac app
+
+- Native SwiftUI and AppKit UI with no third-party runtime dependencies.
+- Hover-first interaction with keyboard focus only when a text tool needs it.
+- English and Ukrainian localization.
+- Optional launch at login and a menu bar control.
+- Customizable tab order and visibility.
+- Works on Macs without a physical notch through its menu bar entry point.
+
+## Build it
+
+You need macOS 15 Sequoia or later and Xcode 16+ with a Swift 6 toolchain.
 
 ```bash
 git clone https://github.com/xand0dev/VoidBar.git
@@ -56,38 +80,62 @@ cd VoidBar
 open build/VoidBar.app
 ```
 
-The bundle script builds the Swift package, compiles the media helper, copies localizations and the app icon, assembles `VoidBar.app`, and applies an ad-hoc signature. To produce a drag-to-Applications disk image:
+The build script compiles the Swift package and media helper, assembles `VoidBar.app`, copies the icon and localizations, and applies an ad-hoc signature. To create a drag-to-Applications disk image:
 
 ```bash
 ./Scripts/dmg.sh
 ```
 
-Because local builds are not notarized, macOS may block the first launch. Open **System Settings → Privacy & Security** and choose **Open Anyway**. Only use `xattr -dr com.apple.quarantine /Applications/VoidBar.app` for an app you built yourself or obtained from a source you trust.
+Local builds are not notarized. If macOS blocks the first launch, open **System Settings → Privacy & Security** and choose **Open Anyway**.
 
-## Test
+### Run the checks
 
 ```bash
 swift test
 ./Scripts/bundle.sh release
 ```
 
-Pull requests run both commands on macOS 15 in GitHub Actions.
+The same test and full-bundle path runs on macOS 15 for every pull request.
 
-## Privacy
+<details>
+<summary><strong>Repository map</strong></summary>
 
-VoidBar has no analytics, advertising, accounts, or project-operated backend. Most data stays on your Mac, but features that need remote data do use the network:
+```text
+Sources/VoidBar/App       app lifecycle, status item, preferences
+Sources/VoidBar/Notch     panel geometry, hover tracking, window lifecycle
+Sources/VoidBar/Model     shared state and tab configuration
+Sources/VoidBar/Services  media, storage, calendar, network-backed features
+Sources/VoidBar/UI        SwiftUI panes and visual components
+Sources/VoidBarMediaHelper
+                         system Now Playing bridge
+Resources                icon and en/uk localizations
+Tests/VoidBarTests        unit and regression tests
+```
 
-- After the Weather tab is opened, it contacts `ipapi.co` for approximate IP-based location and `api.open-meteo.com` for forecasts.
-- TickTick fetches the private iCal URL you configure.
-- Spotify artwork may be loaded from allow-listed Spotify CDN hosts.
-- Apple's Translation framework may download language assets managed by macOS.
+</details>
 
-Clipboard history stays in memory. Notes, snippets, preferences, and the optional TickTick URL are stored locally; copied images can be saved under `~/Pictures/VoidBar`. See [PRIVACY.md](PRIVACY.md) for the complete data and permission map, and [SECURITY.md](SECURITY.md) for vulnerability reporting.
+## Privacy, without hand-waving
 
-## Contributing
+VoidBar has no analytics, advertising, accounts, or project-operated server. That does **not** mean every feature is offline:
 
-Bug reports, feature ideas, documentation improvements, and code contributions are welcome. Start with [CONTRIBUTING.md](CONTRIBUTING.md), use the issue templates, and follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+- opening Weather sends a normal HTTPS request to `ipapi.co`, then coordinates to Open-Meteo;
+- TickTick fetches the private iCal URL you configure;
+- Spotify artwork can load from allow-listed Spotify CDN hosts;
+- macOS may download Translation language assets from Apple.
+
+Clipboard history stays in process memory. Notes, snippets, settings, and the optional TickTick URL are stored locally. Copied images can be saved to `~/Pictures/VoidBar`, and that behavior can be disabled.
+
+The complete network, storage, and permission map is in [PRIVACY.md](PRIVACY.md). Security reports belong in [GitHub Security Advisories](https://github.com/xand0dev/VoidBar/security/advisories/new), not public issues.
+
+## Make it better
+
+Good bug reports, focused pull requests, tests, localization improvements, and sharp product ideas are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) before starting a large change and use [GitHub Discussions](https://github.com/xand0dev/VoidBar/discussions) for early ideas.
+
+- [Changelog](CHANGELOG.md)
+- [Support](SUPPORT.md)
+- [Security policy](SECURITY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## License
 
-VoidBar is available under the [MIT License](LICENSE).
+VoidBar is open source under the [MIT License](LICENSE).
