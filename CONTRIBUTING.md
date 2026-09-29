@@ -49,8 +49,10 @@ open build/VoidBar.app
 
 ```bash
 swift test
-./Scripts/bundle.sh release
+./Scripts/dmg.sh
 ```
+
+`Scripts/dmg.sh` rebuilds the release bundle, packs the disk image, writes its checksum, and verifies both. If a change affects the panels shown in the README, re-record the media with `./Scripts/capture-demo.sh` and `./Scripts/capture-demo.sh uk` (requires ffmpeg).
 
 For UI changes, also launch the built app and verify the panel on the relevant display configuration. Include a screenshot or short recording in the pull request when the visual change is meaningful.
 
