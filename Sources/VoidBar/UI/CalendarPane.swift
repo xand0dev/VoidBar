@@ -131,7 +131,7 @@ struct CalendarPane: View {
         return weekday.string(from: date)
     }
 
-    /// "Через 12 мин" / "Идёт сейчас" — shown in the panel header, on its own,
+    /// "In 12 min" / "Now" — shown in the panel header, on its own,
     /// so it is a label and starts with a capital in either language.
     static func countdown(to meeting: CalendarStore.Meeting, from now: Date) -> String {
         phrase(to: meeting, from: now).sentenceCased
