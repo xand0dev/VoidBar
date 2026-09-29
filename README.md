@@ -33,7 +33,7 @@ No Electron. No account. No project backend. Just SwiftUI, AppKit, and macOS.
 
 A live product tour: open the notch, control music, start a focus timer, translate text, and move on.
 
-![VoidBar live product tour showing music controls, a focus timer, and instant translation](docs/assets/hover-demo.gif)
+![VoidBar walkthrough: music controls, a focus timer, English-to-Ukrainian translation, and clipboard history](docs/assets/walkthrough.gif)
 
 The panel is not a second desktop. It is a short interaction: hover, do the thing, move on. Tabs can be reordered or hidden, so the rail only keeps what belongs in your workflow.
 
@@ -60,7 +60,7 @@ The panel is not a second desktop. It is a short interaction: hover, do the thin
 - **TickTick** — tasks from your private TickTick iCal subscription.
 - **System monitor** — CPU, memory, upload, and download activity at a glance.
 
-![VoidBar media controller with YouTube Music](docs/assets/media.png)
+![VoidBar media controller playing a demo track with original cover art](docs/assets/media.png)
 
 ## Designed like a Mac app
 
