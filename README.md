@@ -8,34 +8,55 @@
 <p align="center">
   <a href="https://github.com/xand0dev/VoidBar/actions/workflows/build.yml"><img alt="Build" src="https://github.com/xand0dev/VoidBar/actions/workflows/build.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/github/license/xand0dev/VoidBar?color=white"></a>
+  <a href="https://github.com/xand0dev/VoidBar/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/xand0dev/VoidBar?color=white"></a>
   <img alt="macOS 15+" src="https://img.shields.io/badge/macOS-15%2B-black?logo=apple">
   <img alt="Swift 6" src="https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white">
 </p>
 
 <p align="center">
-  <a href="#see-it-in-motion">Demo</a> ·
+  <a href="https://github.com/xand0dev/VoidBar/releases/latest"><strong>Download the latest release</strong></a>
+  &nbsp;·&nbsp; free and open source &nbsp;·&nbsp; macOS 15+ &nbsp;·&nbsp; Apple Silicon
+</p>
+
+<p align="center">
+  <a href="#install">Install</a> ·
   <a href="#what-lives-inside">Features</a> ·
-  <a href="#build-it">Build</a> ·
+  <a href="#build-from-source">Build from source</a> ·
   <a href="#privacy-without-hand-waving">Privacy</a> ·
   <a href="README.uk.md">Українська</a>
 </p>
 
-![VoidBar running inside a MacBook display notch](docs/assets/social-preview.png)
+![VoidBar walkthrough: music controls, a focus timer, English-to-Ukrainian translation, and clipboard history](docs/assets/walkthrough.gif)
 
 VoidBar turns the unused space around the MacBook notch into a focused set of everyday tools: media controls, a temporary file shelf, clipboard history, notes, translation, meetings, Pomodoro, weather, and more. It opens on hover, closes when you leave, and never asks you to organize another window.
 
-No Electron. No account. No project backend. Just SwiftUI, AppKit, and macOS.
+It is a productivity hub, not only a media widget. No Electron, no account, no VoidBar backend: just SwiftUI, AppKit, and macOS.
 
-> [!NOTE]
-> VoidBar is under active development. Public notarized binaries are not available yet; the app can be built locally in one command.
+## Install
 
-## See it in motion
+1. Download `VoidBar-<version>-arm64.dmg` from the [latest release](https://github.com/xand0dev/VoidBar/releases/latest).
+2. Open the disk image and drag **VoidBar** to **Applications**.
+3. Open VoidBar from Applications. Its icon appears in the menu bar, and the panel opens when you hover over the notch.
 
-A live product tour: open the notch, control music, start a focus timer, translate text, and move on.
+**Requirements:** macOS 15 Sequoia or later on an Apple Silicon Mac. Release builds are arm64 only; Intel Macs can [build from source](#build-from-source), although that configuration is untested. On a Mac without a notch, the panel opens from the top center of the screen or from the menu bar icon.
 
-![VoidBar live product tour showing music controls, a focus timer, and instant translation](docs/assets/hover-demo.gif)
+### First launch: the build is not notarized
 
-The panel is not a second desktop. It is a short interaction: hover, do the thing, move on. Tabs can be reordered or hidden, so the rail only keeps what belongs in your workflow.
+Releases are ad-hoc signed but not signed with an Apple Developer ID or notarized, so macOS warns that it cannot verify the app. To open it anyway:
+
+1. Open VoidBar once and choose **Done** in the warning. Do not choose **Move to Trash**.
+2. Open **System Settings → Privacy & Security**, scroll to **Security**, and choose **Open Anyway** next to the VoidBar message.
+3. Confirm with your password. Later launches open normally.
+
+The same warning can appear once more when VoidBar starts its Now Playing helper, the small component that reads system and browser playback. Choose **Done**; if macOS keeps it blocked, VoidBar falls back to controlling Apple Music and Spotify directly, and every other feature works as usual.
+
+To check that your download matches the published build, compare its checksum with the `.sha256` file attached to the release:
+
+```bash
+shasum -a 256 -c VoidBar-<version>-arm64.dmg.sha256
+```
+
+Release images are built from the tagged source by [GitHub Actions](.github/workflows/release.yml), which also publishes a build provenance attestation.
 
 ## What lives inside
 
@@ -60,7 +81,7 @@ The panel is not a second desktop. It is a short interaction: hover, do the thin
 - **TickTick** — tasks from your private TickTick iCal subscription.
 - **System monitor** — CPU, memory, upload, and download activity at a glance.
 
-![VoidBar media controller with YouTube Music](docs/assets/media.png)
+![VoidBar media controller playing a demo track with original cover art](docs/assets/media.png)
 
 ## Designed like a Mac app
 
@@ -71,7 +92,7 @@ The panel is not a second desktop. It is a short interaction: hover, do the thin
 - Customizable tab order and visibility.
 - Works on Macs without a physical notch through its menu bar entry point.
 
-## Build it
+## Build from source
 
 You need macOS 15 Sequoia or later and Xcode 16+ with a Swift 6 toolchain.
 
@@ -82,22 +103,22 @@ cd VoidBar
 open build/VoidBar.app
 ```
 
-The build script compiles the Swift package and media helper, assembles `VoidBar.app`, copies the icon and localizations, and applies an ad-hoc signature. To create a drag-to-Applications disk image:
+The build script compiles the Swift package and media helper, assembles `VoidBar.app`, copies the icon and localizations, and applies an ad-hoc signature. A local build runs without the Gatekeeper steps above because it was never downloaded.
+
+To produce the same verified, drag-to-Applications disk image and checksum that a release ships:
 
 ```bash
 ./Scripts/dmg.sh
 ```
 
-Local builds are not notarized. If macOS blocks the first launch, open **System Settings → Privacy & Security** and choose **Open Anyway**.
-
 ### Run the checks
 
 ```bash
 swift test
-./Scripts/bundle.sh release
+./Scripts/dmg.sh
 ```
 
-The same test and full-bundle path runs on macOS 15 for every pull request.
+The same tests, bundle build, and disk-image verification run on macOS 15 for every pull request. README media is re-recorded from the real panel with invented demo content by `./Scripts/capture-demo.sh`.
 
 <details>
 <summary><strong>Repository map</strong></summary>
@@ -137,6 +158,8 @@ Good bug reports, focused pull requests, tests, localization improvements, and s
 - [Support](SUPPORT.md)
 - [Security policy](SECURITY.md)
 - [Code of Conduct](CODE_OF_CONDUCT.md)
+
+If VoidBar earns a place in your menu bar, consider starring the repository.
 
 ## License
 

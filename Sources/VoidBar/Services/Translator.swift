@@ -68,6 +68,11 @@ final class Translator: ObservableObject {
     }
 
     func run(_ session: TranslationSession) async {
+        #if DEBUG
+        // A capture shows a fixed result; it must not depend on which language
+        // packs happen to be installed on the machine recording it.
+        if showsDemo { return }
+        #endif
         let text = trimmed
         guard !text.isEmpty else { clear(); return }
         guard let source = session.sourceLanguage, let target = session.targetLanguage else { return }
@@ -107,6 +112,21 @@ final class Translator: ObservableObject {
         pasteboard.clearContents()
         pasteboard.setString(output, forType: .string)
     }
+
+    #if DEBUG
+    /// Set only by `DemoCapture`.
+    private(set) var showsDemo = false
+
+    /// Capture-only: shows a fixed source and translation. See `DemoCapture`;
+    /// nothing in a normal launch reaches this.
+    func showDemo(input: String, output: String) {
+        showsDemo = true
+        self.input = input
+        self.output = output
+        failure = nil
+        needsDownload = false
+    }
+    #endif
 
     /// "Українська", "English" — for the column headers. Named in the language the
     /// panel itself is in, not in the system's: those two can differ, and a

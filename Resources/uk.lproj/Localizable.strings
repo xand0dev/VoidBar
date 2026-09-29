@@ -25,7 +25,7 @@
 "Show Snippets File" = "Показати файл шаблонів";
 "Quit" = "Вийти";
 
-/* Полка */
+/* Полиця */
 "Selected: %d" = "Вибрано: %d";
 "Deselect" = "Зняти вибір";
 "Clear" = "Очистити";
@@ -34,7 +34,7 @@
 "Show in Finder" = "Показати у Finder";
 "Remove from Shelf" = "Прибрати з полиці";
 
-/* Музыка */
+/* Музика */
 "Nothing is playing" = "Нічого не грає";
 
 /* Заготовки */
@@ -44,19 +44,19 @@
 "Delete" = "Видалити";
 "Nothing here yet — add with +" = "Поки порожньо — додайте через +";
 
-/* Заметки */
+/* Нотатки */
 "Notes" = "Нотатки";
 "New Note" = "Нова нотатка";
 "Empty note" = "Порожня нотатка";
 "Jot something down…" = "Занотуйте що-небудь…";
 
-/* Перевод */
+/* Переклад */
 "Translation Languages…" = "Мови перекладу…";
 "Retry" = "Повторити";
 "The %@ → %@ language pack is not installed." = "Не завантажено мовний пакет %@ → %@.";
 "macOS does not translate this pair of languages." = "macOS не перекладає цю пару мов.";
 
-/* Календарь */
+/* Календар */
 "Join" = "Приєднатися";
 "Join · %@" = "Приєднатися · %@";
 "No other meetings this week" = "Інших зустрічей цього тижня немає";
@@ -69,7 +69,7 @@
 "Nothing on the calendar for the next day" = "Найближчої доби календар порожній";
 "Untitled" = "Без назви";
 
-/* Отсчёт со строчной */
+/* Відлік, з малої літери */
 "now" = "триває зараз";
 "any moment" = "ось-ось";
 "tomorrow" = "завтра";
@@ -78,6 +78,6 @@
 "in %d h %d min" = "за %d год %d хв";
 "in %d d" = "через %d дн";
 
-/* Сохранённые снимки. */
+/* Збережені знімки. */
 "Screenshot" = "Знімок";
 "yyyy-MM-dd 'at' HH.mm.ss" = "yyyy-MM-dd 'о' HH.mm.ss";

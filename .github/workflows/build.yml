@@ -54,6 +54,9 @@ jobs:
             exit 1
           }
 
+      - name: Package and verify disk image
+        run: ./Scripts/dmg.sh
+
       - name: Validate localization keys
         run: |
           python3 - <<'PY'

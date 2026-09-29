@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Until the first public binary release, security fixes are applied to the `main` branch. After releases begin, only the latest published version will be supported unless a release note says otherwise.
+Security fixes are made on the `main` branch and shipped in the next release. Only the latest published [release](https://github.com/xand0dev/VoidBar/releases/latest) is supported unless a release note says otherwise.
 
 ## Report a vulnerability
 

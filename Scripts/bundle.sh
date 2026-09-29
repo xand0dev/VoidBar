@@ -6,7 +6,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG="${1:-release}"
 APP="$ROOT/build/VoidBar.app"
-VERSION="$(sed -n 's/^VERSION=//p' "$ROOT/Scripts/version" 2>/dev/null || echo 0.1.0)"
+VERSION="$(sed -n 's/^VERSION=//p' "$ROOT/Scripts/version")"
+if [ -z "$VERSION" ]; then
+    echo "Scripts/version does not define VERSION" >&2
+    exit 1
+fi
 
 echo "==> swift build -c $CONFIG"
 swift build -c "$CONFIG" --package-path "$ROOT"
@@ -64,18 +68,22 @@ echo "==> compiling media helper"
 clang -fobjc-arc -dynamiclib -o "$APP/Contents/Resources/libvoidmedia.dylib" \
       "$ROOT/Sources/VoidBarMediaHelper/helper.m"
 
-# Таблицы строк кладутся прямо в бандл, а не через ресурсы SwiftPM: бандл здесь
-# собирается вручную, и .lproj рядом с исполняемым файлом — то, где их ищет сама
-# macOS. Язык она выбирает потом сама, по списку предпочитаемых у пользователя.
-echo "==> локализации"
+# String tables go straight into the bundle rather than through SwiftPM
+# resources: the bundle is assembled by hand here, and .lproj folders in
+# Contents/Resources are where macOS itself looks for them. It then picks the
+# language from the user's preferred list on its own.
+echo "==> localizations"
 for lproj in "$ROOT"/Resources/*.lproj; do
     [ -d "$lproj" ] || continue
     cp -R "$lproj" "$APP/Contents/Resources/"
     echo "    $(basename "$lproj")"
 done
 
+# Ad-hoc: no Developer ID is involved, so Gatekeeper still asks on other Macs.
+# A failed signature is fatal — an unsigned bundle does not launch on Apple
+# Silicon and re-prompts for every privacy permission.
 echo "==> ad-hoc signing"
-codesign --force --deep --sign - "$APP" >/dev/null 2>&1 || \
-    echo "    (codesign failed — the app still runs, but TCC prompts may repeat)"
+codesign --force --deep --sign - "$APP"
+codesign --verify --deep --strict "$APP"
 
 echo "==> done: $APP"
