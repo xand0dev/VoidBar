@@ -3,6 +3,13 @@ import AppKit
 // Top-level code runs on the main thread; make that explicit for the compiler.
 MainActor.assumeIsolated {
     let app = NSApplication.shared
+    #if DEBUG
+    // README and social-preview capture; see DemoCapture.
+    if let directory = DemoCapture.requestedDirectory() {
+        DemoCapture.run(app, into: directory)
+        return
+    }
+    #endif
     let delegate = AppDelegate()
     app.delegate = delegate
     app.setActivationPolicy(.accessory)

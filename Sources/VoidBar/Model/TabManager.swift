@@ -15,13 +15,15 @@ final class TabManager: ObservableObject {
     }
     
     private let key = "voidbar.tabs.config"
-    
-    init() {
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
         load()
     }
     
     private func load() {
-        if let data = UserDefaults.standard.data(forKey: key),
+        if let data = defaults.data(forKey: key),
            let saved = try? JSONDecoder().decode([TabConfig].self, from: data) {
             var merged = saved
             let savedIds = Set(saved.map { $0.id })
@@ -42,7 +44,7 @@ final class TabManager: ObservableObject {
     
     private func save() {
         if let data = try? JSONEncoder().encode(configs) {
-            UserDefaults.standard.set(data, forKey: key)
+            defaults.set(data, forKey: key)
         }
     }
     

@@ -277,3 +277,31 @@ final class MediaController: ObservableObject {
         position = duration > 0 ? min(value, duration) : value
     }
 }
+
+#if DEBUG
+extension MediaController {
+    /// Capture-only: shows an invented track without the system feed. See
+    /// `DemoCapture`; nothing in a normal launch reaches this.
+    func showDemo(
+        title: String,
+        artist: String,
+        album: String,
+        source: String,
+        artwork: NSImage?,
+        duration: TimeInterval,
+        position: TimeInterval,
+        isPlaying: Bool
+    ) {
+        let key = "\(title)|\(artist)|\(album)"
+        if track?.key != key {
+            track = Track(title: title, artist: artist, album: album, key: key)
+            artworkKey = key
+            self.artwork = artwork
+        }
+        sourceName = source
+        self.duration = duration
+        self.isPlaying = isPlaying
+        setAnchor(min(max(0, position), duration))
+    }
+}
+#endif

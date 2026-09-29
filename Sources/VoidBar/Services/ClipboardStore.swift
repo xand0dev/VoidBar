@@ -184,3 +184,15 @@ final class ClipboardStore: ObservableObject {
         if items.count > limit { items.removeLast(items.count - limit) }
     }
 }
+
+#if DEBUG
+extension ClipboardStore {
+    /// Capture-only: replaces the history with invented entries. See
+    /// `DemoCapture`; nothing in a normal launch reaches this.
+    func showDemo(_ payloads: [ClipItem.Payload], now: Date = Date()) {
+        items = payloads.enumerated().map { index, payload in
+            ClipItem(payload: payload, date: now.addingTimeInterval(-Double(index) * 90))
+        }
+    }
+}
+#endif
