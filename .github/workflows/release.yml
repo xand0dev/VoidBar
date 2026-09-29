@@ -1,0 +1,70 @@
+name: release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Build and publish release
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out tag
+        uses: actions/checkout@v5
+
+      - name: Check tag against Scripts/version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="$(sed -n 's/^VERSION=//p' Scripts/version)"
+          if [ "v$VERSION" != "$GITHUB_REF_NAME" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match Scripts/version $VERSION"
+            exit 1
+          fi
+          test -f "docs/releases/$VERSION.md" || {
+            echo "docs/releases/$VERSION.md is missing"
+            exit 1
+          }
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Run unit tests
+        run: swift test
+
+      - name: Build, package, and verify disk image
+        run: ./Scripts/dmg.sh
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: build/VoidBar-${{ steps.version.outputs.version }}-*.dmg
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          ASSETS=(build/VoidBar-"$VERSION"-*.dmg build/VoidBar-"$VERSION"-*.dmg.sha256)
+          test "${#ASSETS[@]}" -eq 2
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${ASSETS[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${ASSETS[@]}" \
+              --title "VoidBar $GITHUB_REF_NAME" \
+              --notes-file "docs/releases/$VERSION.md" \
+              --verify-tag
+          fi
