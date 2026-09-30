@@ -157,7 +157,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
     /// PNG encoding is the slow part; off the main thread it does not delay
     /// the next frame or the animations being sampled.
     private let writer = DispatchQueue(label: "dev.xand0.VoidBar.capture.writer")
-    private let stageSize = CGSize(width: 760, height: 318)
+    private let stageSize = CGSize(width: 800, height: 330)
 
     init(directory: URL) {
         self.directory = directory
@@ -260,7 +260,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         vm.tab = .media
         vm.isOpen = true
         stage.showsCaption = false
-        window?.setContentSize(CGSize(width: stageSize.width, height: 272))
+        window?.setContentSize(CGSize(width: stageSize.width, height: 282))
         settle()
         write(snapshot(), to: "media@2x.png")
 
@@ -313,6 +313,26 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         }
         vm.tab = .media
         vm.timer.state = .idle
+
+        // The preferences window, rendered on its own.
+        let settings = NSWindow(
+            contentRect: CGRect(x: 0, y: 0, width: 420, height: 560),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        settings.isReleasedWhenClosed = false
+        settings.appearance = NSAppearance(named: .darkAqua)
+        settings.contentView = NSHostingView(rootView: SettingsView(tabManager: manager))
+        settings.alphaValue = 0.01
+        settings.orderFrontRegardless()
+        settle()
+        if let view = settings.contentView, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+            view.cacheDisplay(in: view.bounds, to: rep)
+            write(rep, to: "gallery/99-settings.png")
+        }
+        settings.orderOut(nil)
+
         manager.configs = saved
         settle()
     }
