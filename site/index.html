@@ -39,7 +39,7 @@ body {
   overflow-x: hidden;
 }
 a { color: inherit; }
-img, video { display: block; max-width: 100%; }
+img, video { display: block; max-width: 100%; height: auto; }
 .wrap { width: min(1160px, calc(100% - 32px)); margin: 0 auto; }
 
 /* Aurora behind the hero */
@@ -114,6 +114,7 @@ h2 { font-size: clamp(30px, 4.4vw, 52px); line-height: 1.06; letter-spacing: -.0
 .split.flip { grid-template-columns: 1.25fr 1fr; }
 .split.flip > :first-child { order: 2; }
 @media (max-width: 900px) { .split, .split.flip { grid-template-columns: 1fr; gap: 30px; } .split.flip > :first-child { order: 0; } }
+.shot video, .shot img { width: 100%; }
 .shot { border-radius: 20px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.55); background: #0d0e11; }
 ul.ticks { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 12px; }
 ul.ticks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--muted); }
@@ -244,7 +245,7 @@ footer a:hover { color: var(--text); }
         <li><span data-i18n-html="overview.t4"><b>Your order</b> — switch widgets on and off in Preferences.</span></li>
       </ul>
     </div>
-    <div class="shot reveal"><img src="media/home.jpg" width="1200" height="370" loading="lazy" alt="VoidBar Overview with now playing, clipboard, focus timer, latest note, and snippets"></div>
+    <div class="shot reveal"><img src="media/home.jpg" width="1200" height="362" loading="lazy" alt="VoidBar Overview with now playing, clipboard, focus timer, latest note, and snippets"></div>
   </div>
 </section>
 
@@ -256,7 +257,7 @@ footer a:hover { color: var(--text); }
       <p class="sub" data-i18n="island.sub">While music plays or a focus session runs, the notch grows a wing on each side — the cover or a progress ring on the left, a live equalizer or countdown on the right. Hover, and it pours open.</p>
       <div class="island"><img src="media/island.jpg" width="1000" height="98" loading="lazy" alt="The folded notch with a timer ring on the left wing and the countdown on the right"></div>
     </div>
-    <div class="shot reveal"><img src="media/media.jpg" width="1200" height="370" loading="lazy" alt="VoidBar music controls with an original demo cover"></div>
+    <div class="shot reveal"><img src="media/media.jpg" width="1200" height="362" loading="lazy" alt="VoidBar music controls with an original demo cover"></div>
   </div>
 </section>
 
@@ -269,7 +270,7 @@ footer a:hover { color: var(--text); }
     </div>
     <div class="chips" role="tablist" id="chips"></div>
     <div class="gallery reveal">
-      <div class="shot"><img id="gallery-img" src="media/timer.jpg" width="1200" height="370" alt=""></div>
+      <div class="shot"><img id="gallery-img" src="media/timer.jpg" width="1200" height="362" alt=""></div>
       <div>
         <h3 id="gallery-title"></h3>
         <p id="gallery-text"></p>
@@ -308,7 +309,7 @@ footer a:hover { color: var(--text); }
       </div>
       <div class="swatch-label" data-i18n="yours.hint">Try it: this page follows your pick too.</div>
     </div>
-    <div class="shot reveal"><img id="yours-img" src="media/home.jpg" width="1200" height="370" loading="lazy" alt="The Overview in the chosen accent"></div>
+    <div class="shot reveal"><img id="yours-img" src="media/home.jpg" width="1200" height="362" loading="lazy" alt="The Overview in the chosen accent"></div>
   </div>
 </section>
 
