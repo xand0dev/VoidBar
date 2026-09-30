@@ -41,6 +41,7 @@ struct Aurora: View {
         )
         .animation(.easeInOut(duration: 1.2), value: colors)
         .onAppear {
+            guard Theme.palette.animations else { return }
             withAnimation(.easeInOut(duration: 7).repeatForever(autoreverses: true)) { drift = true }
         }
         .allowsHitTesting(false)
@@ -109,6 +110,7 @@ struct Reveal: ViewModifier {
             .scaleEffect(shown ? 1 : 0.94)
             .offset(x: shown ? 0 : dx, y: shown ? 0 : dy)
             .onAppear {
+                guard Theme.palette.animations else { shown = true; return }
                 withAnimation(.spring(response: 0.5, dampingFraction: 0.78).delay(delay)) { shown = true }
             }
     }

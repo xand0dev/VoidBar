@@ -40,10 +40,13 @@ enum Theme {
     static let surfaceActive = Color.white.opacity(0.16)
     static let hairline = Color.white.opacity(0.09)
 
-    /// The one accent: a cool, slightly violet blue that holds up on black
-    /// without glowing.
-    static let accent = Color(red: 0.52, green: 0.66, blue: 1.0)
-    static let accentDeep = Color(red: 0.42, green: 0.45, blue: 0.98)
+    /// The user's choices from Preferences → Appearance. Written only on the
+    /// main thread by `Appearance`; read while views render.
+    nonisolated(unsafe) static var palette = Palette.standard
+
+    /// The one accent — a cool blue unless the user picked another.
+    static var accent: Color { palette.accent }
+    static var accentDeep: Color { palette.accentDeep }
     static let positive = Color(red: 0.40, green: 0.84, blue: 0.58)
     static let warning = Color(red: 1.0, green: 0.74, blue: 0.36)
     static let critical = Color(red: 1.0, green: 0.43, blue: 0.41)
@@ -57,7 +60,7 @@ enum Theme {
         switch fraction {
         case 0.9...: return critical
         case 0.75..<0.9: return warning
-        default: return accent
+        default: return palette.loadNormal
         }
     }
 

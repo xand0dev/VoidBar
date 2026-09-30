@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NotchContentView: View {
     @ObservedObject var vm: NotchViewModel
+    @ObservedObject private var appearance = Appearance.shared
 
     private var isOpen: Bool { vm.isOpen || vm.isDropTargeted }
     private var size: CGSize { vm.bodySize }
@@ -21,8 +22,8 @@ struct NotchContentView: View {
             .shadow(color: .black.opacity(isOpen ? 0.55 : 0), radius: 22, y: 10)
 
             // Light from below, in the colours of what is on screen.
-            if isOpen {
-                Aurora(colors: auroraColors, intensity: auroraIntensity)
+            if isOpen, appearance.aurora != .off {
+                Aurora(colors: auroraColors, intensity: auroraIntensity * appearance.auroraIntensity)
                     .frame(width: size.width + 2 * topRadius, height: size.height)
                     .clipShape(NotchShape(topRadius: topRadius, bottomRadius: Theme.openBottomRadius))
                     .transition(.opacity.animation(.easeOut(duration: 0.5)))
@@ -48,7 +49,7 @@ struct NotchContentView: View {
             .opacity(isOpen ? 1 : 0)
             .allowsHitTesting(false)
 
-            if isOpen {
+            if isOpen, Theme.palette.animations {
                 EdgeSweep(shape: NotchShape(topRadius: topRadius, bottomRadius: Theme.openBottomRadius))
                     .frame(width: size.width + 2 * topRadius, height: size.height)
                     .mask(Rectangle().padding(.top, 3))
@@ -73,6 +74,8 @@ struct NotchContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(Theme.openAnimation, value: isOpen)
         .animation(Theme.paneAnimation, value: vm.tab)
+        // A new look repaints everything; views read the palette statically.
+        .id(appearance.version)
     }
 
     // MARK: - Atmosphere
@@ -80,6 +83,9 @@ struct NotchContentView: View {
     /// The aurora's palette: the cover's colours for music, the load colours
     /// for the timer, sky and sun for the weather, the accent elsewhere.
     private var auroraColors: [Color] {
+        if appearance.aurora == .accent {
+            return [Theme.accent, Theme.accentDeep, Theme.accent.opacity(0.8)]
+        }
         switch vm.tab {
         case .home, .media:
             if let palette = vm.media.artworkPalette { return palette }

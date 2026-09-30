@@ -159,3 +159,21 @@
 "Widgets appear for the tabs you use once they have something to show." = "Widgets appear for the tabs you use once they have something to show.";
 "Its tab is off" = "Its tab is off";
 "Drag to set the order. A widget shows only while its tab is on and it has something to show; Now playing takes the large card." = "Drag to set the order. A widget shows only while its tab is on and it has something to show; Now playing takes the large card.";
+
+/* Appearance */
+"Ocean" = "Ocean";
+"Blood red" = "Blood red";
+"Violet" = "Violet";
+"Emerald" = "Emerald";
+"Amber" = "Amber";
+"Graphite" = "Graphite";
+"Custom" = "Custom";
+"By content" = "By content";
+"Accent" = "Accent";
+"Off" = "Off";
+"Accent colour" = "Accent colour";
+"Aurora" = "Aurora";
+"Aurora strength" = "Aurora strength";
+"Opening animations" = "Opening animations";
+"Appearance" = "Appearance";
+"The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off." = "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off.";
