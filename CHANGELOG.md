@@ -4,6 +4,10 @@ All notable changes to VoidBar are documented in this file. Versions before 0.6.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-09-30
+
+A premium redesign built around an Overview of the tabs you use, a live island, and a look you can make your own.
+
 ### Added
 
 - Overview tab, where the panel now opens: the player in a large card while something plays and a grid of widgets built from the tabs you use — agent limits, clipboard and snippets that copy with a click, focus timer, latest note, shelf, tasks, meetings, weather, and system load. Widgets can be switched off and reordered in Preferences.
@@ -77,5 +81,6 @@ The first public release: a downloadable, checksummed disk image built from sour
 - Copied-image handoff to the shelf through the macOS pasteboard.
 - English and Russian localization (Ukrainian replaced Russian in a later development version).
 
-[Unreleased]: https://github.com/xand0dev/VoidBar/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/xand0dev/VoidBar/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/xand0dev/VoidBar/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/xand0dev/VoidBar/releases/tag/v0.6.0
