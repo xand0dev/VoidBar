@@ -4,102 +4,71 @@ struct MonitorPane: View {
     @ObservedObject var monitor: SystemMonitorStore
 
     var body: some View {
-        VStack(spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("CPU")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Theme.secondary)
-                    
-                    Text(String(format: "%.1f%%", monitor.cpuUsage))
-                        .font(.system(size: 24, weight: .semibold).monospacedDigit())
-                        .foregroundStyle(.white)
-                }
-                Spacer()
-                CircularProgressView(progress: monitor.cpuUsage / 100.0, color: .orange)
-                    .frame(width: 40, height: 40)
-            }
-            .padding(.horizontal, 16)
-            
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Memory")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Theme.secondary)
-                    
-                    Text(String(format: "%.1f%%", monitor.memoryUsage))
-                        .font(.system(size: 24, weight: .semibold).monospacedDigit())
-                        .foregroundStyle(.white)
-                }
-                Spacer()
-                CircularProgressView(progress: monitor.memoryUsage / 100.0, color: .blue)
-                    .frame(width: 40, height: 40)
-            }
-            .padding(.horizontal, 16)
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Network")
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(Theme.secondary)
-                    
-                    HStack(spacing: 12) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.down.circle.fill")
-                                .foregroundStyle(Theme.tertiary)
-                            Text(formatSpeed(monitor.networkDownloadSpeed))
-                                .font(.system(size: 14, weight: .medium).monospacedDigit())
-                                .foregroundStyle(.white)
-                        }
-                        
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.up.circle.fill")
-                                .foregroundStyle(Theme.tertiary)
-                            Text(formatSpeed(monitor.networkUploadSpeed))
-                                .font(.system(size: 14, weight: .medium).monospacedDigit())
-                                .foregroundStyle(.white)
-                        }
-                    }
-                }
-                Spacer()
-            }
-            .padding(.horizontal, 16)
+        HStack(spacing: 10) {
+            gaugeTile(title: localized("CPU"), symbol: "cpu", percent: monitor.cpuUsage)
+            gaugeTile(title: localized("Memory"), symbol: "memorychip", percent: monitor.memoryUsage)
+            networkTile
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
+    private func gaugeTile(title: String, symbol: String, percent: Double) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            header(title: title, symbol: symbol)
+            Spacer(minLength: 0)
+            HStack(alignment: .bottom) {
+                Text(String(format: "%.0f", percent))
+                    .font(Theme.numeral(30))
+                    .foregroundStyle(Theme.primary)
+                + Text("%")
+                    .font(Theme.numeral(14, weight: .medium))
+                    .foregroundStyle(Theme.secondary)
+                Spacer(minLength: 4)
+                RingGauge(progress: percent / 100, lineWidth: 5, tint: Theme.load(percent / 100))
+                    .frame(width: 40, height: 40)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .card(padding: 12)
+        .animation(.easeOut(duration: 0.4), value: percent)
+    }
+
+    private var networkTile: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            header(title: localized("Network"), symbol: "network")
+            Spacer(minLength: 0)
+            speedRow(symbol: "arrow.down", value: monitor.networkDownloadSpeed, tint: Theme.accent)
+            speedRow(symbol: "arrow.up", value: monitor.networkUploadSpeed, tint: Theme.positive)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .card(padding: 12)
+    }
+
+    private func header(title: String, symbol: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(Theme.tertiary)
+            SectionLabel(text: title)
+        }
+    }
+
+    private func speedRow(symbol: String, value: Double, tint: Color) -> some View {
+        HStack(spacing: 7) {
+            IconChip(symbol: symbol, tint: tint, size: 20)
+            Text(formatSpeed(value))
+                .font(Theme.numeral(15))
+                .foregroundStyle(Theme.primary)
+        }
+    }
+
     private func formatSpeed(_ bytesPerSecond: Double) -> String {
         let kbps = bytesPerSecond / 1024
         if kbps > 1024 {
-            let mbps = kbps / 1024
-            return String(format: "%.1f MB/s", mbps)
+            return String(format: "%.1f MB/s", kbps / 1024)
         } else {
             return String(format: "%.0f KB/s", kbps)
-        }
-    }
-}
-
-private struct CircularProgressView: View {
-    let progress: Double
-    let color: Color
-    
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(
-                    color.opacity(0.3),
-                    lineWidth: 6
-                )
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    color,
-                    style: StrokeStyle(
-                        lineWidth: 6,
-                        lineCap: .round
-                    )
-                )
-                .rotationEffect(.degrees(-90))
-                .animation(.easeOut, value: progress)
         }
     }
 }

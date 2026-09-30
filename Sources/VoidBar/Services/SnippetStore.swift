@@ -38,6 +38,10 @@ struct Snippet: Identifiable, Codable, Equatable {
 final class SnippetStore: ObservableObject {
     @Published private(set) var items: [Snippet] = []
     @Published var query = ""
+    #if DEBUG
+    /// Set by `showDemo`: the real snippets file is neither read nor written.
+    fileprivate(set) var showsDemo = false
+    #endif
 
     /// Matches the name and the value alike: one remembers an address either by
     /// what it is called or by what is in it, rarely reliably by both.
@@ -67,6 +71,9 @@ final class SnippetStore: ObservableObject {
     /// app, so the only sensible moment to trust what is in memory is the
     /// moment before it is shown.
     func reload() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         guard let data = try? Data(contentsOf: Self.file) else {
             items = []
             return
@@ -105,6 +112,9 @@ final class SnippetStore: ObservableObject {
     /// and edited by hand, and `\/` in every URL would be the app making that
     /// harder for its own convenience.
     private func persist() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .withoutEscapingSlashes]
         do {
@@ -137,3 +147,13 @@ private extension String {
         range(of: needle, options: [.caseInsensitive, .diacriticInsensitive]) != nil
     }
 }
+
+#if DEBUG
+extension SnippetStore {
+    /// Capture-only: invented snippets. See `DemoCapture`.
+    func showDemo(_ snippets: [Snippet]) {
+        showsDemo = true
+        items = snippets
+    }
+}
+#endif

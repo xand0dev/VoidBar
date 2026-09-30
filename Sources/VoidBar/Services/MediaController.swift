@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 
 /// Now Playing for whatever the system is playing — browser tabs included.
 ///
@@ -13,7 +14,13 @@ final class MediaController: ObservableObject {
     }
 
     @Published private(set) var track: Track?
-    @Published private(set) var artwork: NSImage?
+    @Published private(set) var artwork: NSImage? {
+        // Worked out once per cover, not per redraw: the aurora and the glow
+        // behind the artwork both read it.
+        didSet { if artwork !== oldValue { artworkPalette = artwork.flatMap(ArtworkTint.palette) } }
+    }
+    /// The cover's colour and two neighbours, or nil without artwork.
+    @Published private(set) var artworkPalette: [Color]?
     @Published private(set) var isPlaying = false
     @Published private(set) var duration: TimeInterval = 0
     @Published private(set) var position: TimeInterval = 0
@@ -302,6 +309,11 @@ extension MediaController {
         self.duration = duration
         self.isPlaying = isPlaying
         setAnchor(min(max(0, position), duration))
+    }
+
+    /// Capture-only: nothing playing.
+    func clearDemo() {
+        clear()
     }
 }
 #endif

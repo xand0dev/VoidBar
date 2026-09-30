@@ -18,7 +18,10 @@ case "$LANGUAGE" in
 esac
 command -v ffmpeg >/dev/null || { echo "ffmpeg is required" >&2; exit 1; }
 
-ASSETS="$ROOT/docs/assets"
+# VOIDBAR_ASSETS_OUT sends the README media elsewhere, for recordings that
+# must not replace the committed ones.
+ASSETS="${VOIDBAR_ASSETS_OUT:-$ROOT/docs/assets}"
+mkdir -p "$ASSETS"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 
@@ -29,6 +32,13 @@ VOIDBAR_CAPTURE_DIR="$WORK" \
     "$ROOT/build/VoidBar.app/Contents/MacOS/VoidBar" \
     -AppleLanguages "($LANGUAGE)" -AppleShowScrollBars WhenScrolling
 
+# Optional: keep the per-tab stills for design reviews.
+if [ -n "${VOIDBAR_GALLERY_OUT:-}" ]; then
+    mkdir -p "$VOIDBAR_GALLERY_OUT"
+    cp "$WORK"/gallery/*.png "$VOIDBAR_GALLERY_OUT"/
+    echo "==> gallery: $(ls "$WORK"/gallery | wc -l | tr -d ' ') stills"
+fi
+
 echo "==> encoding"
 # GIFs for the README: only the changed rectangle of each frame is stored,
 # which is what keeps a mostly still panel small. MP4s at full resolution go to
@@ -36,15 +46,17 @@ echo "==> encoding"
 MEDIA="$ROOT/build/media"
 mkdir -p "$MEDIA"
 for scene in walkthrough usage-tour; do
-    ffmpeg -v error -y -f concat -i "$WORK/$scene.ffconcat" -vf "\
-fps=15,scale=880:-1:flags=lanczos,split[a][b];\
-[a]palettegen=max_colors=96:stats_mode=diff:reserve_transparent=0[p];\
-[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
-        -loop 0 "$ASSETS/$scene$SUFFIX.gif"
     ffmpeg -v error -y -f concat -i "$WORK/$scene.ffconcat" \
         -vf "fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
         -c:v libx264 -preset slow -crf 14 -tune animation -movflags +faststart -an \
         "$MEDIA/$scene$SUFFIX.mp4"
+    # The GIF is made from the MP4: video encoding smooths the aurora's
+    # gradients, which the GIF palette then needs far fewer bytes to hold.
+    ffmpeg -v error -y -i "$MEDIA/$scene$SUFFIX.mp4" -vf "\
+fps=12,scale=800:-1:flags=lanczos,split[a][b];\
+[a]palettegen=max_colors=96:stats_mode=diff:reserve_transparent=0[p];\
+[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
+        -loop 0 "$ASSETS/$scene$SUFFIX.gif"
 done
 
 for still in media usage; do
@@ -61,5 +73,5 @@ fi
 
 for file in "$ASSETS"/walkthrough$SUFFIX.gif "$ASSETS"/usage-tour$SUFFIX.gif \
     "$ASSETS"/media$SUFFIX.png "$ASSETS"/usage$SUFFIX.png "$MEDIA"/*$SUFFIX.mp4; do
-    echo "    $(basename "$file") $(du -h "$file" | cut -f1 | tr -d ' ')"
+    echo "    $(basename "$file") $(( $(stat -f %z "$file") / 1024 )) KB"
 done

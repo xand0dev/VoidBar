@@ -36,19 +36,21 @@ struct NotesPane: View {
                 focused = true
             } label: {
                 HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 10, weight: .semibold))
+                    Image(systemName: "square.and.pencil")
+                        .font(.system(size: 11, weight: .semibold))
                     Text("New Note")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(Theme.captionEmphasis)
+                    Spacer(minLength: 0)
                 }
-                .foregroundStyle(Theme.secondary)
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity)
-                .frame(height: 24)
+                .frame(height: 28)
                 .background(
-                    RoundedRectangle(cornerRadius: 7, style: .continuous)
-                        .fill(Theme.surface)
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(Theme.accent.opacity(0.12))
                 )
-                .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
             }
             .buttonStyle(.plain)
 
@@ -74,7 +76,7 @@ struct NotesPane: View {
                 .padding(.bottom, 2)
             }
         }
-        .frame(width: 170)
+        .frame(width: 176)
     }
 
     // MARK: - Editor
@@ -100,9 +102,10 @@ struct NotesPane: View {
                 .textEditorStyle(.plain)
                 .scrollContentBackground(.hidden)
                 .scrollIndicators(.hidden)
-                .font(.system(size: 12.5))
-                .foregroundStyle(.white)
-                .tint(Theme.secondary)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.primary)
+                .lineSpacing(2)
+                .tint(Theme.accent)
                 .focused($focused)
                 // The editor insets its text by a few points of its own; pull
                 // that back so the first character lines up with the padding.
@@ -145,7 +148,7 @@ struct NotesPane: View {
 
             if currentText.isEmpty {
                 Text("Jot something down…")
-                    .font(.system(size: 12.5))
+                    .font(.system(size: 13))
                     .foregroundStyle(Theme.tertiary)
                     .allowsHitTesting(false)
             }
@@ -155,11 +158,7 @@ struct NotesPane: View {
                 CopyNoteButton(text: currentText)
             }
         }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Theme.surface)
-        )
+        .card(padding: 12)
     }
 }
 
@@ -172,10 +171,13 @@ private struct NoteRow: View {
     @State private var hovering = false
 
     var body: some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 7) {
+            Capsule()
+                .fill(isSelected ? Theme.accent : .clear)
+                .frame(width: 2.5, height: 14)
             Text(preview)
-                .font(.system(size: 11, weight: isSelected ? .medium : .regular))
-                .foregroundStyle(isSelected ? .white : Theme.secondary)
+                .font(.system(size: 11.5, weight: isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? Theme.primary : Theme.secondary)
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 4)
@@ -189,10 +191,11 @@ private struct NoteRow: View {
                 .help(localized("Delete"))
             }
         }
-        .padding(.horizontal, 8)
-        .frame(height: 26)
+        .padding(.leading, 5)
+        .padding(.trailing, 8)
+        .frame(height: 28)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(isSelected ? Theme.surfaceHover : hovering ? Theme.surface : .clear)
         )
         .contentShape(Rectangle())
@@ -225,7 +228,7 @@ private struct CopyNoteButton: View {
         } label: {
             Image(systemName: copied ? "checkmark" : "doc.on.doc")
                 .font(.system(size: 10, weight: .semibold))
-                .foregroundStyle(copied ? Color.green : Theme.secondary)
+                .foregroundStyle(copied ? Theme.positive : Theme.secondary)
         }
         .buttonStyle(.plain)
         .help(localized("Copy"))

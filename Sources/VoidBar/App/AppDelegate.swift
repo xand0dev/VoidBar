@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var clearVaultItem: NSMenuItem?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Resolve the saved look before anything is drawn.
+        _ = Appearance.shared
         controller = NotchController()
         controller?.install()
         installStatusItem()

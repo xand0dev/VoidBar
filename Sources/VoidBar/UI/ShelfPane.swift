@@ -73,17 +73,22 @@ struct ShelfPane: View {
     private var dropHint: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
             .strokeBorder(
-                isTargeted ? Color.white.opacity(0.6) : Theme.hairline,
-                style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])
+                isTargeted ? Theme.accent.opacity(0.8) : Color.white.opacity(0.14),
+                style: StrokeStyle(lineWidth: 1.25, dash: [6, 5])
             )
             .background(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(isTargeted ? Theme.surface : .clear)
+                    .fill(isTargeted ? Theme.accent.opacity(0.08) : .clear)
             )
             .overlay(
-                Image(systemName: "tray.and.arrow.down.fill")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundStyle(isTargeted ? .white : Theme.tertiary)
+                VStack(spacing: 7) {
+                    Image(systemName: "tray.and.arrow.down.fill")
+                        .font(.system(size: 18, weight: .regular))
+                        .foregroundStyle(isTargeted ? Theme.accent : Theme.tertiary)
+                    Text(localized("Drop files to keep them here"))
+                        .font(Theme.captionEmphasis)
+                        .foregroundStyle(isTargeted ? Theme.primary : Theme.tertiary)
+                }
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(Theme.contentAnimation, value: isTargeted)
@@ -91,24 +96,20 @@ struct ShelfPane: View {
 
     private var footer: some View {
         HStack(spacing: 10) {
-            if !shelf.selection.isEmpty {
-                Text(localized("Selected: %d", shelf.selection.count))
-                    .font(.system(size: 9))
-                    .foregroundStyle(Theme.tertiary)
-            }
+            Text(shelf.selection.isEmpty
+                 ? localized("Drag out to use · ⌘-click to pick several")
+                 : localized("Selected: %d", shelf.selection.count))
+                .font(Theme.caption)
+                .foregroundStyle(Theme.tertiary)
             Spacer()
             if !shelf.selection.isEmpty {
-                Button("Deselect") { shelf.clearSelection() }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(Theme.secondary)
+                Button(localized("Deselect")) { shelf.clearSelection() }
+                    .buttonStyle(PillButtonStyle())
             }
-            Button("Clear") { shelf.clear() }
-                .buttonStyle(.plain)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Theme.secondary)
+            Button(localized("Clear")) { shelf.clear() }
+                .buttonStyle(PillButtonStyle())
         }
-        .padding(.top, 2)
+        .padding(.top, 4)
     }
 }
 
@@ -129,32 +130,39 @@ private struct ShelfCard: View {
     private var isSelected: Bool { shelf.isSelected(item) }
 
     var body: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 7) {
             // Fit, not fill: a screenshot is landscape and a file icon is
             // square, and forcing either into the other's box is what squashed
-            // the wide ones. The box is wide enough for a 16:10 frame, so a
+            // the wide ones. The well is wide enough for a 16:10 frame, so a
             // square icon simply centres in it.
             Image(nsImage: item.icon)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
-                .frame(width: 68, height: 40)
+                .frame(width: 70, height: 46)
+                .shadow(color: .black.opacity(0.35), radius: 4, y: 2)
+                .frame(width: 80, height: 56)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color.black.opacity(0.35))
+                )
             Text(item.name)
-                .font(.system(size: 9))
-                .foregroundStyle(Theme.secondary)
+                .font(.system(size: 9.5, weight: .medium))
+                .foregroundStyle(isSelected ? Theme.primary : Theme.secondary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
                 .frame(height: 24, alignment: .top)
         }
-        .padding(.horizontal, 6)
-        .padding(.vertical, 8)
-        .frame(width: 86, height: 92)
+        .padding(.horizontal, 5)
+        .padding(.top, 5)
+        .padding(.bottom, 4)
+        .frame(width: 90, height: 100)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(isSelected ? Color.white.opacity(0.18) : (isHovered ? Theme.surfaceHover : Theme.surface))
+                .fill(isSelected ? Theme.accent.opacity(0.16) : (isHovered ? Theme.surfaceHover : Theme.surface))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .strokeBorder(Color.white.opacity(isSelected ? 0.55 : 0), lineWidth: 1.5)
+                .strokeBorder(isSelected ? Theme.accent.opacity(0.8) : Color.white.opacity(0.07), lineWidth: isSelected ? 1.25 : 0.75)
                 .allowsHitTesting(false)
         )
         // Owns clicks and drags: a group drag needs one dragging item per file,
@@ -170,8 +178,8 @@ private struct ShelfCard: View {
         .overlay(alignment: .topLeading) {
             if isSelected {
                 Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 12))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.white, Theme.accent)
                     .padding(4)
                     .allowsHitTesting(false)
             }

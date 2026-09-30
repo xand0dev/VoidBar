@@ -6,10 +6,7 @@ struct ClipboardPane: View {
     var body: some View {
         VStack(spacing: 0) {
             if clipboard.items.isEmpty {
-                Image(systemName: "list.clipboard")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundStyle(Theme.tertiary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                EmptyState(symbol: "list.clipboard", title: localized("Copied items appear here"))
             } else {
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 3) {
@@ -18,7 +15,9 @@ struct ClipboardPane: View {
                         }
                     }
                     .padding(.vertical, 4)
+                    .padding(.bottom, 10)
                 }
+                .fadingBottomEdge()
                 footer
             }
         }
@@ -27,13 +26,14 @@ struct ClipboardPane: View {
 
     private var footer: some View {
         HStack {
+            Text(localized("Kept in memory only"))
+                .font(Theme.caption)
+                .foregroundStyle(Theme.tertiary)
             Spacer()
-            Button("Clear") { clipboard.clear() }
-                .buttonStyle(.plain)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(Theme.secondary)
+            Button(localized("Clear")) { clipboard.clear() }
+                .buttonStyle(PillButtonStyle())
         }
-        .padding(.top, 2)
+        .padding(.top, 4)
     }
 }
 
@@ -46,16 +46,18 @@ private struct ClipRow: View {
 
     var body: some View {
         HStack(spacing: 9) {
-            Image(systemName: justCopied ? "checkmark" : item.symbol)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(justCopied ? Color.green : Theme.tertiary)
-                .frame(width: 14)
+            IconChip(symbol: justCopied ? "checkmark" : item.symbol, tint: justCopied ? Theme.positive : tint, size: 20)
             Text(item.preview.replacingOccurrences(of: "\n", with: " "))
-                .font(.system(size: 11))
-                .foregroundStyle(.white)
+                .font(Theme.body)
+                .foregroundStyle(Theme.primary)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer(minLength: 6)
+            if !hovering {
+                Text(shortAge(since: item.date))
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.tertiary)
+            }
             if hovering {
                 Button { clipboard.remove(item) } label: {
                     Image(systemName: "xmark")
@@ -65,10 +67,11 @@ private struct ClipRow: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.horizontal, 9)
-        .frame(height: 26)
+        .padding(.leading, 5)
+        .padding(.trailing, 10)
+        .frame(height: 28)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(hovering ? Theme.surfaceHover : Theme.surface)
         )
         .contentShape(Rectangle())
@@ -80,5 +83,14 @@ private struct ClipRow: View {
         }
         .animation(Theme.contentAnimation, value: hovering)
         .animation(Theme.contentAnimation, value: justCopied)
+    }
+
+    /// Links in the accent, files in green, plain text neutral.
+    private var tint: Color {
+        switch item.symbol {
+        case "link": return Theme.accent
+        case "doc": return Theme.positive
+        default: return .white
+        }
     }
 }

@@ -48,13 +48,11 @@ private struct AgentCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
-            HStack(spacing: 6) {
-                Image(systemName: symbol)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(Theme.secondary)
+            HStack(spacing: 7) {
+                IconChip(symbol: symbol, tint: Theme.accent, size: 20)
                 Text(name)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 12.5, weight: .semibold))
+                    .foregroundStyle(Theme.primary)
                 if let plan = usage?.plan {
                     Text(plan.uppercased())
                         .font(.system(size: 8, weight: .bold))
@@ -89,12 +87,8 @@ private struct AgentCard: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(11)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Theme.surface)
-        )
+        .card(padding: 12)
     }
 
     @ViewBuilder
@@ -116,10 +110,10 @@ private struct AgentCard: View {
                         Text(copied ? localized("Copied") : localized("Copy setup"))
                     }
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(copied ? Color.green : .white)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 4)
-                    .background(Capsule().fill(Theme.surfaceHover))
+                    .background(Capsule().fill(copied ? Theme.surfaceHover : Color.white.opacity(0.9)))
+                    .foregroundStyle(copied ? Theme.positive : Color.black)
                 }
                 .buttonStyle(.plain)
                 Text(localized("Paste it into ~/.claude/settings.json."))
@@ -151,18 +145,10 @@ private struct WindowRow: View {
                     .foregroundStyle(Theme.secondary)
                 Spacer(minLength: 4)
                 Text("\(Int(current.usedPercent.rounded()))%")
-                    .font(.system(size: 11, weight: .semibold).monospacedDigit())
-                    .foregroundStyle(.white)
+                    .font(Theme.numeral(13))
+                    .foregroundStyle(Theme.primary)
             }
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.08))
-                    Capsule()
-                        .fill(UsageFormat.tint(for: current.usedPercent))
-                        .frame(width: max(0, geo.size.width * fraction))
-                }
-            }
-            .frame(height: 4)
+            CapsuleProgress(fraction: fraction, tint: UsageFormat.tint(for: current.usedPercent), height: 5)
             Text(UsageFormat.reset(window, now: now))
                 .font(.system(size: 9, weight: .medium).monospacedDigit())
                 .foregroundStyle(Theme.tertiary)
@@ -177,11 +163,7 @@ enum UsageFormat {
     /// White until the window gets tight; the bar is the one thing in the
     /// panel that should draw the eye when a limit is close.
     static func tint(for percent: Double) -> Color {
-        switch percent {
-        case 90...: return Color(red: 1, green: 0.42, blue: 0.38)
-        case 75..<90: return Color(red: 1, green: 0.72, blue: 0.35)
-        default: return Color.white.opacity(0.9)
-        }
+        Theme.load(percent / 100)
     }
 
     static func reset(_ window: UsageWindow, now: Date) -> String {

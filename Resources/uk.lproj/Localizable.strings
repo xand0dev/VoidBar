@@ -96,3 +96,80 @@
 "Resets %@" = "Скидання: %@";
 "just now" = "щойно";
 "%@ ago" = "%@ тому";
+
+/* Редизайн */
+"%d today" = "%d сьогодні";
+"All done for today!" = "На сьогодні все!";
+"CPU" = "Процесор";
+"Calendars" = "Календарі";
+"Clear sky" = "Ясно";
+"Cloudy" = "Хмарно";
+"Copied items appear here" = "Тут з'являтиметься скопійоване";
+"Drag out to use · ⌘-click to pick several" = "Перетягніть, щоб використати · ⌘-клік, щоб вибрати кілька";
+"Drag to reorder. Switched-off tabs leave the panel but keep their data." = "Перетягуйте, щоб змінити порядок. Вимкнені вкладки зникають з панелі, але зберігають дані.";
+"Drizzle" = "Мряка";
+"Drop files to keep them here" = "Киньте сюди файли, щоб притримати їх";
+"Duration" = "Тривалість";
+"Focus" = "Фокус";
+"Fog" = "Туман";
+"Kept in memory only" = "Лише в пам'яті";
+"Later" = "Далі";
+"Memory" = "Пам'ять";
+"Network" = "Мережа";
+"Next hours" = "Найближчі години";
+"No matches" = "Нічого не знайдено";
+"Now" = "Зараз";
+"Partly cloudy" = "Мінлива хмарність";
+"Pause" = "Пауза";
+"Paused" = "На паузі";
+"Play" = "Старт";
+"Rain" = "Дощ";
+"Ready" = "Готово";
+"Refresh" = "Оновити";
+"Reset" = "Скинути";
+"Search snippets" = "Пошук шаблонів";
+"Showers" = "Зливи";
+"Snow" = "Сніг";
+"Speed" = "Швидкість";
+"Tabs" = "Вкладки";
+"Thunderstorm" = "Гроза";
+"TickTick is not connected" = "TickTick не підключено";
+"Today" = "Сьогодні";
+"Version %@" = "Версія %@";
+"Weather is unavailable" = "Погода недоступна";
+
+/* Overview */
+"Overview" = "Огляд";
+"Now playing" = "Зараз грає";
+"Next" = "Далі";
+"Connect in Calendar" = "Підключіть у Календарі";
+"Open Weather to turn it on" = "Відкрийте Погоду, щоб увімкнути";
+"5-hour limits" = "Ліміти на 5 годин";
+"Last copied" = "Останнє скопійоване";
+
+/* Overview widgets */
+"AI limits" = "Ліміти ШІ";
+"Latest note" = "Остання нотатка";
+"Next meeting" = "Наступна зустріч";
+"Nothing to show yet" = "Поки нічого показувати";
+"Widgets appear for the tabs you use once they have something to show." = "Віджети з'являються для вкладок, якими ви користуєтеся, щойно їм є що показати.";
+"Its tab is off" = "Його вкладку вимкнено";
+"Drag to set the order. A widget shows only while its tab is on and it has something to show; Now playing takes the large card." = "Перетягуйте, щоб задати порядок. Віджет видно, лише коли його вкладка увімкнена і йому є що показати; «Зараз грає» займає велику картку.";
+
+/* Appearance */
+"Ocean" = "Океан";
+"Blood red" = "Кривавий";
+"Violet" = "Фіолетовий";
+"Emerald" = "Смарагдовий";
+"Amber" = "Бурштиновий";
+"Graphite" = "Графітовий";
+"Custom" = "Свій колір";
+"By content" = "За вмістом";
+"Accent" = "Акцент";
+"Off" = "Вимкнено";
+"Accent colour" = "Акцентний колір";
+"Aurora" = "Аврора";
+"Aurora strength" = "Сила аврори";
+"Opening animations" = "Анімації відкриття";
+"Appearance" = "Вигляд";
+"The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off." = "Сама панель лишається чорною, щоб зливатися з вирізом. Якщо в Системних параметрах → Доступність увімкнено «Зменшити рух», анімації вимкнені.";

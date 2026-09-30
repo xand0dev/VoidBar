@@ -10,14 +10,11 @@ struct CalendarPane: View {
         case .denied:
             deniedState
         case .granted:
-            ZStack(alignment: .topTrailing) {
-                if let next = calendar.next {
-                    agenda(next: next)
-                } else {
-                    emptyState
-                }
-                
-                settingsMenu
+            if let next = calendar.next {
+                agenda(next: next)
+            } else {
+                emptyState
+                    .overlay(alignment: .topTrailing) { settingsMenu }
             }
         }
     }
@@ -25,81 +22,96 @@ struct CalendarPane: View {
     // MARK: - Agenda
 
     private func agenda(next: CalendarStore.Meeting) -> some View {
-        HStack(alignment: .top, spacing: 18) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 7) {
-                    Circle()
-                        .fill(Color(next.calendarColor))
-                        .frame(width: 7, height: 7)
+        HStack(alignment: .top, spacing: 12) {
+            HStack(alignment: .top, spacing: 11) {
+                Capsule()
+                    .fill(Color(next.calendarColor))
+                    .frame(width: 3.5)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(Self.countdown(to: next, from: calendar.now))
+                        .font(Theme.captionEmphasis)
+                        .foregroundStyle(next.isRunning ? Color.black : Theme.accent)
+                        .padding(.horizontal, 8)
+                        .frame(height: 19)
+                        .background(Capsule().fill(next.isRunning ? Theme.positive : Theme.accent.opacity(0.16)))
                     Text(next.title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.primary)
+                        .lineLimit(2)
+                        .padding(.top, 8)
+                    Text(subtitle(for: next))
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondary)
                         .lineLimit(1)
-                }
-                Text(subtitle(for: next))
-                    .font(.system(size: 11.5))
-                    .foregroundStyle(Theme.secondary)
-                    .lineLimit(1)
-                    .padding(.top, 4)
-                    .padding(.leading, 14)
+                        .padding(.top, 3)
 
-                Spacer(minLength: 10)
+                    Spacer(minLength: 8)
 
-                if next.link != nil {
-                    Button {
-                        calendar.join(next)
-                        HapticManager.play(.alignment)
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "video.fill").font(.system(size: 10))
-                            Text(next.provider.map { localized("Join · %@", $0) } ?? localized("Join"))
-                                .font(.system(size: 11, weight: .medium))
+                    if next.link != nil {
+                        Button {
+                            calendar.join(next)
+                            HapticManager.play(.alignment)
+                        } label: {
+                            Label(
+                                next.provider.map { localized("Join · %@", $0) } ?? localized("Join"),
+                                systemImage: "video.fill"
+                            )
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(
-                            Capsule().fill(next.isRunning ? Color.white.opacity(0.92) : Theme.surfaceHover)
-                        )
-                        .foregroundStyle(next.isRunning ? .black : .white)
+                        .buttonStyle(PillButtonStyle(prominent: true))
                     }
-                    .buttonStyle(.plain)
-                    .padding(.leading, 14)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .card(padding: 12)
 
             rest
         }
-        .padding(.top, 4)
     }
 
-    /// Everything after the next meeting, as a column on the right.
+    /// Everything after the next meeting, as a timeline on the right.
     private var rest: some View {
-        VStack(alignment: .leading, spacing: 7) {
-            ForEach(calendar.upcoming.prefix(4)) { meeting in
-                HStack(spacing: 7) {
-                    Circle()
-                        .fill(Color(meeting.calendarColor))
-                        .frame(width: 5, height: 5)
-                    Text(Self.clock.string(from: meeting.start))
-                        .font(.system(size: 10, weight: .medium).monospacedDigit())
-                        .foregroundStyle(Theme.secondary)
-                        .frame(width: 34, alignment: .leading)
-                        .opacity(Foundation.Calendar.current.isDateInToday(meeting.start) ? 1 : 0.6)
-                    Text(meeting.title)
-                        .font(.system(size: 10.5))
-                        .foregroundStyle(Theme.tertiary)
-                        .lineLimit(1)
-                }
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                SectionLabel(text: localized("Later"))
+                Spacer()
+                settingsMenu
             }
-            if calendar.upcoming.isEmpty {
-                Text("No other meetings this week")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Theme.tertiary)
+            .frame(height: 22)
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(calendar.upcoming.prefix(4)) { meeting in
+                    HStack(spacing: 9) {
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(Color(meeting.calendarColor))
+                            .frame(width: 3, height: 22)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(meeting.title)
+                                .font(Theme.bodyEmphasis)
+                                .foregroundStyle(Theme.primary)
+                                .lineLimit(1)
+                            Text(timeLabel(for: meeting))
+                                .font(Theme.numeral(10, weight: .medium))
+                                .foregroundStyle(Theme.tertiary)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+                if calendar.upcoming.isEmpty {
+                    Text("No other meetings this week")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.tertiary)
+                }
             }
             Spacer(minLength: 0)
         }
-        .frame(width: 230, alignment: .leading)
+        .frame(width: 190, alignment: .leading)
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    private func timeLabel(for meeting: CalendarStore.Meeting) -> String {
+        let clock = Self.clock.string(from: meeting.start)
+        guard let day = Self.day(for: meeting.start) else { return clock }
+        return "\(day.sentenceCased) · \(clock)"
     }
 
     private func subtitle(for meeting: CalendarStore.Meeting) -> String {
@@ -157,12 +169,10 @@ struct CalendarPane: View {
 
     private var permissionPrompt: some View {
         VStack(spacing: 9) {
-            Image(systemName: "calendar")
-                .font(.system(size: 22, weight: .light))
-                .foregroundStyle(Theme.tertiary)
+            IconChip(symbol: "calendar", tint: Theme.accent, size: 34)
             Text("See your next meetings")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Theme.secondary)
+                .font(Theme.bodyEmphasis)
+                .foregroundStyle(Theme.primary)
             Text("VoidBar needs Calendar access for this tab. Other features\nmay request their own permissions when used.")
                 .font(.system(size: 10))
                 .foregroundStyle(Theme.tertiary)
@@ -174,47 +184,27 @@ struct CalendarPane: View {
                 calendar.requestAccess()
             } label: {
                 Text("Allow")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .background(Capsule().fill(Theme.surfaceHover))
-                    .contentShape(Capsule())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PillButtonStyle(prominent: true))
             .padding(.top, 2)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var deniedState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "calendar.badge.exclamationmark")
-                .font(.system(size: 22, weight: .light))
-                .foregroundStyle(Theme.tertiary)
-            Text("Calendar access is off")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Theme.secondary)
-            Text("Settings → Privacy → Calendars")
-                .font(.system(size: 10))
-                .foregroundStyle(Theme.tertiary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyState(
+            symbol: "calendar.badge.exclamationmark",
+            title: localized("Calendar access is off"),
+            message: localized("Settings → Privacy → Calendars")
+        )
     }
 
     private var emptyState: some View {
-        VStack(spacing: 8) {
-            Image(systemName: "checkmark.circle")
-                .font(.system(size: 22, weight: .light))
-                .foregroundStyle(Theme.tertiary)
-            Text("No more meetings")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(Theme.secondary)
-            Text("Nothing on the calendar for the next day")
-                .font(.system(size: 10))
-                .foregroundStyle(Theme.tertiary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        EmptyState(
+            symbol: "checkmark.circle",
+            title: localized("No more meetings"),
+            message: localized("Nothing on the calendar for the next day")
+        )
     }
 
     private var settingsMenu: some View {
@@ -238,14 +228,14 @@ struct CalendarPane: View {
                 }
             }
         } label: {
-            Image(systemName: "slider.horizontal.3")
-                .font(.system(size: 12))
-                .foregroundStyle(Theme.secondary)
+            Image(systemName: "line.3.horizontal.decrease")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Theme.tertiary)
                 .contentShape(Rectangle())
         }
         .menuStyle(.borderlessButton)
-        .frame(width: 24, height: 24)
-        .padding(.trailing, 0)
-        .padding(.top, -2)
+        .menuIndicator(.hidden)
+        .frame(width: 22, height: 22)
+        .help(localized("Calendars"))
     }
 }

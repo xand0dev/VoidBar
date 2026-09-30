@@ -2,64 +2,121 @@ import SwiftUI
 
 struct TimerPane: View {
     @ObservedObject var timer: TimerStore
-    
+
     let presets: [TimeInterval] = [5 * 60, 10 * 60, 25 * 60, 50 * 60]
     let presetLabels = ["5m", "10m", "25m", "50m"]
 
+    private var progress: Double {
+        guard timer.selectedDuration > 0, timer.state != .idle else { return 0 }
+        return 1 - timer.timeRemaining / timer.selectedDuration
+    }
+
+    private var stateLabel: String {
+        switch timer.state {
+        case .idle: return localized("Ready")
+        case .running: return localized("Focus")
+        case .paused: return localized("Paused")
+        }
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
-            Text(timer.formattedTime)
-                .font(.system(size: 48, weight: .semibold).monospacedDigit())
-                .foregroundStyle(.white)
-                
-            HStack(spacing: 8) {
-                ForEach(0..<presets.count, id: \.self) { i in
-                    Button(presetLabels[i]) {
-                        timer.selectDuration(presets[i])
-                    }
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(timer.selectedDuration == presets[i] ? .white : Theme.secondary)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule()
-                            .fill(timer.selectedDuration == presets[i] ? Color.white.opacity(0.15) : Color.clear)
-                    )
-                    .buttonStyle(.plain)
-                    .disabled(timer.state == .running)
+        HStack(spacing: 26) {
+            ZStack {
+                RingGauge(
+                    progress: progress,
+                    lineWidth: 7,
+                    tint: timer.state == .paused ? Theme.warning : Theme.accent
+                )
+                VStack(spacing: 2) {
+                    Text(timer.formattedTime)
+                        .font(Theme.numeral(30))
+                        .foregroundStyle(Theme.primary)
+                        .contentTransition(.numericText())
+                    Text(stateLabel.uppercased())
+                        .font(Theme.micro)
+                        .tracking(1)
+                        .foregroundStyle(timer.state == .running ? Theme.accent : Theme.tertiary)
                 }
             }
+            .frame(width: 136, height: 136)
+            .animation(.easeOut(duration: 0.3), value: timer.timeRemaining)
 
-            HStack(spacing: 30) {
-                Button {
-                    timer.reset()
-                } label: {
-                    Image(systemName: "arrow.counterclockwise")
-                        .font(.system(size: 20))
-                }
-                .buttonStyle(NotchButtonStyle(size: 40))
-
-                Button {
-                    if timer.state == .running {
-                        timer.pause()
-                    } else {
-                        timer.start()
+            VStack(alignment: .leading, spacing: 14) {
+                SectionLabel(text: localized("Duration"))
+                presetPicker
+                HStack(spacing: 12) {
+                    Button {
+                        if timer.state == .running {
+                            timer.pause()
+                        } else {
+                            timer.start()
+                        }
+                    } label: {
+                        Image(systemName: timer.state == .running ? "pause.fill" : "play.fill")
                     }
-                } label: {
-                    Image(systemName: timer.state == .running ? "pause.fill" : "play.fill")
-                        .font(.system(size: 24))
+                    .buttonStyle(NotchButtonStyle(size: 42, prominent: true))
+
+                    Button {
+                        timer.reset()
+                    } label: {
+                        Image(systemName: "arrow.counterclockwise")
+                    }
+                    .buttonStyle(NotchButtonStyle(size: 34))
+                    .help(localized("Reset"))
+
+                    Spacer(minLength: 0)
+                    sessions
                 }
-                .buttonStyle(NotchButtonStyle(size: 50, prominent: true))
             }
-            .padding(.top, 4)
-            
-            if timer.completedToday > 0 {
-                Text("🍅 Completed today: \(timer.completedToday)")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(Theme.tertiary)
-                    .padding(.top, 4)
-            }
+            .frame(width: 230)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var presetPicker: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<presets.count, id: \.self) { i in
+                let selected = timer.selectedDuration == presets[i]
+                Button {
+                    timer.selectDuration(presets[i])
+                } label: {
+                    Text(presetLabels[i])
+                        .font(Theme.captionEmphasis)
+                        .foregroundStyle(selected ? Theme.primary : Theme.secondary)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                                .fill(selected ? Theme.surfaceActive : .clear)
+                        )
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(timer.state == .running)
+            }
+        }
+        .padding(2)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Theme.surface)
+        )
+        .opacity(timer.state == .running ? 0.55 : 1)
+        .animation(Theme.contentAnimation, value: timer.selectedDuration)
+    }
+
+    /// One dot per finished session today, up to eight.
+    @ViewBuilder
+    private var sessions: some View {
+        if timer.completedToday > 0 {
+            VStack(alignment: .trailing, spacing: 4) {
+                HStack(spacing: 3) {
+                    ForEach(0..<min(timer.completedToday, 8), id: \.self) { _ in
+                        Circle().fill(Theme.accent).frame(width: 5, height: 5)
+                    }
+                }
+                Text(localized("%d today", timer.completedToday))
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.tertiary)
+            }
+        }
     }
 }

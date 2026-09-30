@@ -100,3 +100,80 @@
 "Resets %@" = "Resets %@";
 "just now" = "just now";
 "%@ ago" = "%@ ago";
+
+/* Redesign */
+"%d today" = "%d today";
+"All done for today!" = "All done for today!";
+"CPU" = "CPU";
+"Calendars" = "Calendars";
+"Clear sky" = "Clear sky";
+"Cloudy" = "Cloudy";
+"Copied items appear here" = "Copied items appear here";
+"Drag out to use · ⌘-click to pick several" = "Drag out to use · ⌘-click to pick several";
+"Drag to reorder. Switched-off tabs leave the panel but keep their data." = "Drag to reorder. Switched-off tabs leave the panel but keep their data.";
+"Drizzle" = "Drizzle";
+"Drop files to keep them here" = "Drop files to keep them here";
+"Duration" = "Duration";
+"Focus" = "Focus";
+"Fog" = "Fog";
+"Kept in memory only" = "Kept in memory only";
+"Later" = "Later";
+"Memory" = "Memory";
+"Network" = "Network";
+"Next hours" = "Next hours";
+"No matches" = "No matches";
+"Now" = "Now";
+"Partly cloudy" = "Partly cloudy";
+"Pause" = "Pause";
+"Paused" = "Paused";
+"Play" = "Play";
+"Rain" = "Rain";
+"Ready" = "Ready";
+"Refresh" = "Refresh";
+"Reset" = "Reset";
+"Search snippets" = "Search snippets";
+"Showers" = "Showers";
+"Snow" = "Snow";
+"Speed" = "Speed";
+"Tabs" = "Tabs";
+"Thunderstorm" = "Thunderstorm";
+"TickTick is not connected" = "TickTick is not connected";
+"Today" = "Today";
+"Version %@" = "Version %@";
+"Weather is unavailable" = "Weather is unavailable";
+
+/* Overview */
+"Overview" = "Overview";
+"Now playing" = "Now playing";
+"Next" = "Next";
+"Connect in Calendar" = "Connect in Calendar";
+"Open Weather to turn it on" = "Open Weather to turn it on";
+"5-hour limits" = "5-hour limits";
+"Last copied" = "Last copied";
+
+/* Overview widgets */
+"AI limits" = "AI limits";
+"Latest note" = "Latest note";
+"Next meeting" = "Next meeting";
+"Nothing to show yet" = "Nothing to show yet";
+"Widgets appear for the tabs you use once they have something to show." = "Widgets appear for the tabs you use once they have something to show.";
+"Its tab is off" = "Its tab is off";
+"Drag to set the order. A widget shows only while its tab is on and it has something to show; Now playing takes the large card." = "Drag to set the order. A widget shows only while its tab is on and it has something to show; Now playing takes the large card.";
+
+/* Appearance */
+"Ocean" = "Ocean";
+"Blood red" = "Blood red";
+"Violet" = "Violet";
+"Emerald" = "Emerald";
+"Amber" = "Amber";
+"Graphite" = "Graphite";
+"Custom" = "Custom";
+"By content" = "By content";
+"Accent" = "Accent";
+"Off" = "Off";
+"Accent colour" = "Accent colour";
+"Aurora" = "Aurora";
+"Aurora strength" = "Aurora strength";
+"Opening animations" = "Opening animations";
+"Appearance" = "Appearance";
+"The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off." = "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off.";

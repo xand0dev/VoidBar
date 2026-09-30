@@ -56,9 +56,10 @@ struct DemoScript {
         /// Shows the Usage tab in the rail, as after turning it on in Preferences.
         let showsUsageTab: Bool
 
-        /// The tabs the scene visits, in order, for the caption strip.
+        /// The tabs the scene visits, in order, for the caption strip. The
+        /// panel opens on the overview.
         var chapters: [NotchViewModel.Tab] {
-            [.media] + steps.compactMap {
+            [.home] + steps.compactMap {
                 if case .select(let tab) = $0.action { return tab }
                 return nil
             }
@@ -86,18 +87,18 @@ struct DemoScript {
         .text("Design review moved to Thursday, 15:00"),
     ]
 
-    /// Music → Focus Timer → Translation → Clipboard, then fold away.
+    /// Overview → Focus Timer → Translation → Clipboard, then fold away.
     static let walkthrough: [Step] = [
-        Step(at: 0.9, action: .open),
-        Step(at: 3.2, action: .select(.timer)),
-        Step(at: 4.0, action: .startTimer),
-        Step(at: 5.9, action: .select(.translate)),
-        Step(at: 6.3, action: .type(translationInput)),
-        Step(at: 8.9, action: .select(.clipboard)),
-        Step(at: 10.8, action: .close),
+        Step(at: 1.2, action: .open),
+        Step(at: 4.1, action: .select(.timer)),
+        Step(at: 4.8, action: .startTimer),
+        Step(at: 6.5, action: .select(.translate)),
+        Step(at: 6.9, action: .type(translationInput)),
+        Step(at: 9.4, action: .select(.clipboard)),
+        Step(at: 11.2, action: .close),
     ]
 
-    static let length: TimeInterval = 11.6
+    static let length: TimeInterval = 11.95
 
     /// Music → Usage: open the panel, look at both agents' limits, watch a
     /// fresh Codex response move the numbers, fold away.
@@ -157,7 +158,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
     /// PNG encoding is the slow part; off the main thread it does not delay
     /// the next frame or the animations being sampled.
     private let writer = DispatchQueue(label: "dev.xand0.VoidBar.capture.writer")
-    private let stageSize = CGSize(width: 760, height: 318)
+    private let stageSize = CGSize(width: 860, height: 352)
 
     init(directory: URL) {
         self.directory = directory
@@ -223,6 +224,14 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         let suite = "dev.xand0.VoidBar.capture"
         UserDefaults().removePersistentDomain(forName: suite)
         vm.tabManager = TabManager(defaults: UserDefaults(suiteName: suite) ?? .standard)
+        // Optional: record with a particular tab set, in order — to preview
+        // how the panel and its Overview look for a given setup.
+        if let list = ProcessInfo.processInfo.environment["VOIDBAR_CAPTURE_TABS"] {
+            let wanted = list.split(separator: ",").compactMap { NotchViewModel.Tab(rawValue: String($0)) }
+            let rest = NotchViewModel.Tab.allCases.filter { !wanted.contains($0) }
+            vm.tabManager.configs = wanted.map { .init(id: $0, isEnabled: true) }
+                + rest.map { .init(id: $0, isEnabled: false) }
+        }
 
         vm.media.showDemo(
             title: DemoScript.track.title,
@@ -241,7 +250,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
     private func reset(for scene: DemoScript.Scene) {
         guard let vm else { return }
         vm.isOpen = false
-        vm.tab = .media
+        vm.tab = .home
         vm.timer.state = .idle
         vm.timer.selectDuration(25 * 60)
         timerStartedAt = nil
@@ -260,7 +269,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         vm.tab = .media
         vm.isOpen = true
         stage.showsCaption = false
-        window?.setContentSize(CGSize(width: stageSize.width, height: 272))
+        window?.setContentSize(CGSize(width: stageSize.width, height: 302))
         settle()
         write(snapshot(), to: "media@2x.png")
 
@@ -274,7 +283,10 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         vm.tab = .media
         setUsageTabEnabled(false)
 
-        // The social card is a different canvas: the panel with a title.
+        captureGallery()
+
+        // The social card is a different canvas: the overview with a title.
+        vm.tab = .home
         stage.layout = .social
         window?.setContentSize(CGSize(width: 960, height: 480))
         settle()
@@ -286,7 +298,75 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         settle()
     }
 
+    /// One still per tab, every tab switched on, plus the folded island —
+    /// the before/after material for design reviews.
+    private func captureGallery() {
+        guard let vm else { return }
+        try? FileManager.default.createDirectory(
+            at: directory.appendingPathComponent("gallery"), withIntermediateDirectories: true
+        )
+        let manager = vm.tabManager
+        let saved = manager.configs
+        manager.configs = saved.map { TabManager.TabConfig(id: $0.id, isEnabled: true) }
+        DemoGallery.fill(vm)
+
+        vm.isOpen = false
+        vm.timer.state = .running
+        settle()
+        write(snapshot(), to: "gallery/00-collapsed.png")
+
+        vm.isOpen = true
+        for (index, tab) in NotchViewModel.Tab.allCases.enumerated() {
+            vm.tab = tab
+            settle()
+            write(snapshot(), to: String(format: "gallery/%02d-%@.png", index + 1, tab.rawValue))
+        }
+
+        // The Overview with nothing playing: the grid takes the whole width.
+        let artwork = vm.media.artwork
+        vm.media.clearDemo()
+        vm.tab = .home
+        settle()
+        write(snapshot(), to: "gallery/90-home-quiet.png")
+        vm.media.showDemo(
+            title: DemoScript.track.title,
+            artist: DemoScript.track.artist,
+            album: DemoScript.track.album,
+            source: DemoScript.source,
+            artwork: artwork,
+            duration: DemoScript.trackDuration,
+            position: DemoScript.trackStart,
+            isPlaying: true
+        )
+        vm.tab = .media
+        vm.timer.state = .idle
+
+        // The preferences window, rendered on its own.
+        let settings = NSWindow(
+            contentRect: CGRect(x: 0, y: 0, width: 420, height: 560),
+            styleMask: [.titled],
+            backing: .buffered,
+            defer: false
+        )
+        settings.isReleasedWhenClosed = false
+        settings.appearance = NSAppearance(named: .darkAqua)
+        settings.contentView = NSHostingView(rootView: SettingsView(tabManager: manager))
+        settings.alphaValue = 0.01
+        settings.orderFrontRegardless()
+        settle()
+        if let view = settings.contentView, let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) {
+            view.cacheDisplay(in: view.bounds, to: rep)
+            write(rep, to: "gallery/99-settings.png")
+        }
+        settings.orderOut(nil)
+
+        manager.configs = saved
+        settle()
+    }
+
     private func setUsageTabEnabled(_ enabled: Bool) {
+        // A tab set given for the recording is shown as it is.
+        guard ProcessInfo.processInfo.environment["VOIDBAR_CAPTURE_TABS"] == nil else { return }
         guard let manager = vm?.tabManager,
               let index = manager.configs.firstIndex(where: { $0.id == .usage }) else { return }
         manager.configs[index].isEnabled = enabled
@@ -555,6 +635,81 @@ private struct DemoStage: View {
         }
         .padding(.bottom, 18)
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Gallery content
+
+/// Invented content for every tab. Stores switched into demo mode stop
+/// reading and writing their real files, calendars, and network sources.
+@MainActor
+enum DemoGallery {
+    static func fill(_ vm: NotchViewModel) {
+        let now = Date()
+        vm.shelf.showDemo([
+            ("Launch checklist.pdf", NSWorkspace.shared.icon(for: .pdf)),
+            ("Hero shot.png", DemoArtwork.make(side: 256)),
+            ("Release notes.md", NSWorkspace.shared.icon(for: .plainText)),
+            ("VoidBar-0.6.0-arm64.dmg", NSWorkspace.shared.icon(for: .diskImage)),
+            ("Roadmap.key", NSWorkspace.shared.icon(for: .presentation)),
+        ])
+        vm.snippets.showDemo([
+            Snippet(label: "Email", text: "hello@example.com"),
+            Snippet(label: "Repository", text: "https://github.com/xand0dev/VoidBar"),
+            Snippet(label: "Office", text: "+1 555 010 0199"),
+            Snippet(label: "Sign-off", text: "Thanks — talk soon."),
+        ])
+        vm.notes.showDemo([
+            "Release checklist\n– Tag v0.6.0\n– Upload the social preview\n– Draft the Show HN post",
+            "Menu bar quick toggles?",
+            "Call the design team at 16:00",
+        ])
+        let calendar = Foundation.Calendar.current
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now
+        vm.calendar.showDemo([
+            .init(id: "1", title: "Design review", start: now.addingTimeInterval(25 * 60),
+                  end: now.addingTimeInterval(55 * 60), calendarColor: .systemBlue,
+                  link: URL(string: "https://example.com/meet"), provider: "Zoom"),
+            .init(id: "2", title: "Launch sync", start: now.addingTimeInterval(3 * 3600),
+                  end: now.addingTimeInterval(3.5 * 3600), calendarColor: .systemPurple, link: nil, provider: nil),
+            .init(id: "3", title: "Standup", start: tomorrow.addingTimeInterval(10.5 * 3600),
+                  end: tomorrow.addingTimeInterval(10.75 * 3600), calendarColor: .systemGreen, link: nil, provider: nil),
+            .init(id: "4", title: "1:1 with Alex", start: tomorrow.addingTimeInterval(14 * 3600),
+                  end: tomorrow.addingTimeInterval(14.5 * 3600), calendarColor: .systemOrange, link: nil, provider: nil),
+        ])
+        vm.timer.selectDuration(25 * 60)
+        vm.timer.timeRemaining = 18 * 60 + 42
+        vm.timer.completedToday = 3
+        vm.translator.showDemo(input: DemoScript.translationInput, output: DemoScript.translationOutput)
+        let codes = [2, 2, 1, 0, 0, 1, 3, 3, 61, 61, 3, 2]
+        let hour = calendar.dateInterval(of: .hour, for: now)?.start ?? now
+        vm.weather.showDemo(WeatherData(
+            temperature: 18.4,
+            condition: 2,
+            locationName: "Lisbon",
+            hourly: codes.enumerated().map { index, code in
+                HourlyWeather(
+                    time: hour.addingTimeInterval(Double(index) * 3600),
+                    temperature: 18.4 + sin(Double(index) / 2) * 2.5,
+                    condition: code
+                )
+            }
+        ))
+        vm.tickTick.showDemo([
+            TickTickTask(id: "a", title: "Record the new README walkthrough", isCompleted: false,
+                         dueDate: now, priority: 5),
+            TickTickTask(id: "b", title: "Reply to the Product Hunt comments", isCompleted: false,
+                         dueDate: now.addingTimeInterval(86400), priority: 3),
+            TickTickTask(id: "c", title: "Review the translation strings", isCompleted: false,
+                         dueDate: nil, priority: 1),
+            TickTickTask(id: "d", title: "Tag v0.6.0", isCompleted: true, dueDate: now, priority: 0),
+        ])
+        vm.monitor.cpuUsage = 23.4
+        vm.monitor.memoryUsage = 61.2
+        vm.monitor.networkDownloadSpeed = 2.4 * 1024 * 1024
+        vm.monitor.networkUploadSpeed = 320 * 1024
+        vm.teleprompter.text = "Hi, I'm showing VoidBar today. It lives in the MacBook notch, opens when you hover, and gets out of the way when you leave."
+        vm.usage.showDemo(claude: DemoScript.claudeUsage(), codex: DemoScript.codexUsage())
     }
 }
 

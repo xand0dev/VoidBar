@@ -6,7 +6,15 @@ All notable changes to VoidBar are documented in this file. Versions before 0.6.
 
 ### Added
 
+- Overview tab, where the panel now opens: the player in a large card while something plays and a grid of widgets built from the tabs you use — agent limits, clipboard and snippets that copy with a click, focus timer, latest note, shelf, tasks, meetings, weather, and system load. Widgets can be switched off and reordered in Preferences.
+- Live island: while music plays or a timer runs, the folded notch grows a wing on each side with the cover or a timer ring and a live equalizer or countdown.
+- Appearance preferences: accent colour (six presets or any colour), aurora by content, in the accent, or off, its strength, and opening animations.
 - Usage tab with the five-hour and weekly plan limits of Claude Code and Codex, read locally from Codex session logs and from a Claude Code status line bridge (`VoidBar --claude-statusline`). Off by default.
+- A project website on GitHub Pages with a direct download of the latest release.
+
+### Changed
+
+- A full visual redesign: lit cards with hairline edges, one accent colour, SF Rounded numerals, shared components across every tab, a slightly larger panel, a choreographed opening, and a soft aurora behind the content.
 
 ## [0.6.0] - 2026-09-29
 

@@ -39,6 +39,10 @@ final class NoteStore: ObservableObject {
     }
 
     private var saveWork: DispatchWorkItem?
+    #if DEBUG
+    /// Set by `showDemo`: demo notes must never replace the real file.
+    fileprivate(set) var showsDemo = false
+    #endif
 
     init() {
         load()
@@ -93,6 +97,9 @@ final class NoteStore: ObservableObject {
     /// lives in memory either way, and the file only has to be right by the
     /// time somebody could read it.
     private func scheduleSave() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         saveWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             MainActor.assumeIsolated { self?.flush() }
@@ -102,6 +109,9 @@ final class NoteStore: ObservableObject {
     }
 
     func flush() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         saveWork?.cancel()
         saveWork = nil
         do {
@@ -112,3 +122,17 @@ final class NoteStore: ObservableObject {
         }
     }
 }
+
+#if DEBUG
+extension NoteStore {
+    /// Capture-only: invented notes that are never written to disk. See
+    /// `DemoCapture`; nothing in a normal launch reaches this.
+    func showDemo(_ texts: [String]) {
+        showsDemo = true
+        notes = texts.enumerated().map { index, text in
+            Note(id: UUID(), text: text, edited: Date().addingTimeInterval(-Double(index) * 3600))
+        }
+        selected = notes.first?.id
+    }
+}
+#endif

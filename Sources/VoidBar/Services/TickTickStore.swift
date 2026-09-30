@@ -20,6 +20,10 @@ final class TickTickStore: ObservableObject {
     @AppStorage("tickTickCalendarURL") var calendarURLString: String = ""
     
     private var timer: Timer?
+    #if DEBUG
+    /// Set by `showDemo`: the subscription URL is never fetched.
+    fileprivate(set) var showsDemo = false
+    #endif
     
     init() {
         // Initial fetch
@@ -40,6 +44,9 @@ final class TickTickStore: ObservableObject {
     }
     
     func fetchTasks() async {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         guard let url = URL(string: calendarURLString), !calendarURLString.isEmpty else {
             errorMessage = "Please set your TickTick calendar URL in Settings."
             return
@@ -106,3 +113,15 @@ final class TickTickStore: ObservableObject {
         return tasks
     }
 }
+
+#if DEBUG
+extension TickTickStore {
+    /// Capture-only: invented tasks. See `DemoCapture`.
+    func showDemo(_ demo: [TickTickTask]) {
+        showsDemo = true
+        tasks = demo
+        isLoading = false
+        errorMessage = nil
+    }
+}
+#endif

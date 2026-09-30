@@ -48,6 +48,10 @@ final class CalendarStore: ObservableObject {
     }
 
     private let store = EKEventStore()
+    #if DEBUG
+    /// Set by `showDemo`: EventKit is not consulted.
+    fileprivate(set) var showsDemo = false
+    #endif
     private var timer: Timer?
     private var observer: Any?
     /// Whether the panel is open. The half-minute tick serves eyes only — it
@@ -88,6 +92,9 @@ final class CalendarStore: ObservableObject {
     /// tick; closing stops it. Meetings still change while the panel is
     /// closed, but `EKEventStoreChanged` covers that without a clock.
     func setActive(_ active: Bool) {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         isActive = active
         guard active else { return stopTimer() }
         guard access == .granted else { return }
@@ -98,6 +105,9 @@ final class CalendarStore: ObservableObject {
     /// Called when the calendar tab is shown. Never prompts — it only notices
     /// that access was granted elsewhere, or since last launch.
     func refreshAccess() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         access = Self.currentAccess()
         guard access == .granted else { return }
         observe()
@@ -285,3 +295,16 @@ enum MeetingLink {
         return hosts.first { host == $0.key || host.hasSuffix(".\($0.key)") }?.value
     }
 }
+
+#if DEBUG
+extension CalendarStore {
+    /// Capture-only: invented meetings, shown as if access were granted. See
+    /// `DemoCapture`; EventKit is never asked.
+    func showDemo(_ demo: [Meeting]) {
+        showsDemo = true
+        access = .granted
+        meetings = demo
+        now = Date()
+    }
+}
+#endif
