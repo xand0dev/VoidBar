@@ -29,7 +29,7 @@
 
 ![VoidBar walkthrough: the notch grows into a live island, opens onto the Overview, then a focus timer, English-to-Ukrainian translation, and clipboard history](docs/assets/walkthrough.gif)
 
-VoidBar turns the unused space around the MacBook notch into a focused set of everyday tools: media controls, a temporary file shelf, clipboard history, notes, translation, meetings, Pomodoro, weather, and more. It opens on hover, closes when you leave, and never asks you to organize another window.
+VoidBar turns the unused space around the MacBook notch into a focused set of everyday tools: an Overview of what matters to you, media controls, a temporary file shelf, clipboard history, notes, translation, a focus timer, meetings, weather, and the limits of Claude Code and Codex. It opens on hover, closes when you leave, and never asks you to organize another window.
 
 It is a productivity hub, not only a media widget. No Electron, no account, no VoidBar backend: just SwiftUI, AppKit, and macOS.
 
@@ -70,7 +70,7 @@ Release images are built from the tagged source by [GitHub Actions](.github/work
 
 - **Media** — system Now Playing, Apple Music, Spotify, and browser sessions with artwork, progress, seeking, and transport controls.
 - **Shelf** — park files in the notch, switch apps, then drag them out where they belong.
-- **Clipboard** — the latest 40 text, link, file, and image entries, kept in memory while VoidBar runs.
+- **Clipboard** — the latest 40 texts, links, and files, kept in memory while VoidBar runs. Copied images and screenshots land on the Shelf instead.
 
 ### Keep focus
 
@@ -83,7 +83,7 @@ Release images are built from the tagged source by [GitHub Actions](.github/work
 
 - **Calendar** — upcoming meetings and safe one-click links for Meet, Zoom, Teams, and more.
 - **Translation** — Apple's native Translation framework instead of a custom cloud service.
-- **Weather** — current conditions and 24 hours ahead through Open-Meteo.
+- **Weather** — current conditions, the day's range, and the next hours through Open-Meteo.
 - **TickTick** — tasks from your private TickTick iCal subscription.
 - **System monitor** — CPU, memory, upload, and download activity at a glance.
 - **Usage** — how much of the five-hour and weekly plan limits of Claude Code and Codex is left, and when each resets. Off by default; turn it on in Preferences. See [Coding agent limits](#coding-agent-limits).

@@ -12,7 +12,7 @@ body:
     attributes:
       label: VoidBar version or commit
       description: Use the app version from the menu bar or a commit SHA for a source build.
-      placeholder: v0.6.0 or 3ee37ac
+      placeholder: v0.7.0 or 3ee37ac
     validations:
       required: true
   - type: input
