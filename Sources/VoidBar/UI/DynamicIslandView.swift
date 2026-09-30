@@ -1,129 +1,111 @@
 import SwiftUI
 
+/// The folded panel while something is going on: the notch grows a wing on
+/// each side, like a Dynamic Island. The left wing says what it is — the cover,
+/// a timer ring, the sky — and the right wing shows it live.
 struct DynamicIslandView: View {
     @ObservedObject var vm: NotchViewModel
-    
+
     private var notchWidth: CGFloat { vm.geometry.notchSize.width }
     private var notchHeight: CGFloat { vm.geometry.notchSize.height }
+    private let wing: CGFloat = 58
 
     var body: some View {
-        // Single right-side wing that merges with the notch edge.
-        // By placing the pill inside a wider-than-notch frame and aligning it
-        // to trailing, we guarantee it sits flush against the notch's right
-        // edge regardless of how wide the notch is on a given Mac.
-        HStack(spacing: 0) {
-            Spacer(minLength: 0)
-            
-            if pillKind != nil {
-                activePill
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+        let active = activity != nil
+        ZStack(alignment: .top) {
+            // One black silhouette, notch included, with the notch's own
+            // concave shoulders where it meets the top of the display.
+            NotchShape(topRadius: Theme.collapsedTopRadius, bottomRadius: notchHeight / 2)
+                .fill(Color.black)
+                .frame(
+                    width: (active ? notchWidth + 2 * wing : notchWidth) + 2 * Theme.collapsedTopRadius,
+                    height: notchHeight
+                )
+                .opacity(active ? 1 : 0)
+
+            if let activity {
+                HStack(spacing: 0) {
+                    leading(activity)
+                        .frame(width: wing)
+                    Color.clear.frame(width: notchWidth)
+                    trailing(activity)
+                        .frame(width: wing)
+                }
+                .frame(height: notchHeight)
+                .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                .id(activity)
             }
         }
-        // Extra width so the pill can sit fully outside the notch area.
-        // The 6pt trailing padding keeps it clear of the notch's rounded corner.
-        .padding(.trailing, 6)
-        .frame(width: notchWidth + 140, height: notchHeight)
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: pillKind)
+        .frame(width: notchWidth + 2 * wing + 2 * Theme.collapsedTopRadius, height: notchHeight, alignment: .top)
+        .animation(.spring(response: 0.42, dampingFraction: 0.74), value: activity)
     }
 
-    // MARK: - Active Pill
+    // MARK: - Wings
 
     @ViewBuilder
-    private var activePill: some View {
-        switch pillKind {
+    private func leading(_ activity: Activity) -> some View {
+        switch activity {
+        case .media:
+            Group {
+                if let image = vm.media.artwork {
+                    Image(nsImage: image).resizable().aspectRatio(contentMode: .fill)
+                } else {
+                    Image(systemName: "music.note")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Theme.accent)
+                }
+            }
+            .frame(width: 20, height: 20)
+            .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
         case .timer:
-            pillBody {
-                Image(systemName: "timer")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(Theme.accent)
-                Text(vm.timer.formattedTime)
-                    .font(Theme.numeral(11.5))
-                    .foregroundColor(.white)
-                    .lineLimit(1)
+            RingGauge(progress: timerProgress, lineWidth: 2.5, tint: Theme.accent)
+                .frame(width: 18, height: 18)
+        case .weather:
+            if let weather = vm.weather.weather {
+                Image(systemName: WeatherSymbols.symbol(for: weather.condition))
+                    .symbolRenderingMode(.multicolor)
+                    .font(.system(size: 13))
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func trailing(_ activity: Activity) -> some View {
+        switch activity {
+        case .media:
+            EqualizerBars(isAnimating: vm.media.isPlaying, tint: vm.media.artworkPalette?.first ?? Theme.accent)
+        case .timer:
+            Text(vm.timer.formattedTime)
+                .font(Theme.numeral(12))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .fixedSize()
+        case .weather:
+            if let weather = vm.weather.weather {
+                Text(String(format: "%.0f°", weather.temperature))
+                    .font(Theme.numeral(12))
+                    .foregroundStyle(.white)
                     .fixedSize()
             }
-        case .media:
-            pillBody {
-                EqualizerBars(isAnimating: true)
-                if vm.media.track != nil {
-                    Text(formatTime(vm.media.position))
-                        .font(.system(size: 11, weight: .medium).monospacedDigit())
-                        .foregroundColor(.white)
-                        .lineLimit(1)
-                        .fixedSize()
-                }
-            }
-        case .weather:
-            if let w = vm.weather.weather {
-                pillBody {
-                    Image(systemName: weatherSymbol(for: w.condition))
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.white)
-                    Text(String(format: "%.0f°", w.temperature))
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.white)
-                        .lineLimit(1)
-                        .fixedSize()
-                }
-            }
-        case .none:
-            EmptyView()
         }
     }
 
-    // MARK: - Shared Pill Chrome
-
-    private func pillBody<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        HStack(spacing: 6) {
-            content()
-        }
-        .padding(.horizontal, 11)
-        .frame(height: notchHeight)
-        .background(Color.black)
-        .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.75)
-        )
+    private var timerProgress: Double {
+        guard vm.timer.selectedDuration > 0 else { return 0 }
+        return 1 - vm.timer.timeRemaining / vm.timer.selectedDuration
     }
 
-    // MARK: - Pill Priority
+    // MARK: - Priority
 
-    private enum PillKind: Equatable {
+    private enum Activity: Hashable {
         case timer, media, weather
     }
 
-    private var pillKind: PillKind? {
+    /// A running timer outranks music, and music outranks the weather.
+    private var activity: Activity? {
         if vm.timer.state == .running { return .timer }
         if vm.media.isPlaying { return .media }
         if vm.weather.weather != nil { return .weather }
         return nil
-    }
-
-    // MARK: - Helpers
-
-    private func formatTime(_ seconds: Double) -> String {
-        let mins = Int(seconds) / 60
-        let secs = Int(seconds) % 60
-        return String(format: "%d:%02d", mins, secs)
-    }
-
-    private func weatherSymbol(for code: Int) -> String {
-        switch code {
-        case 0: return "sun.max.fill"
-        case 1, 2: return "cloud.sun.fill"
-        case 3: return "cloud.fill"
-        case 45, 48: return "cloud.fog.fill"
-        case 51...57: return "cloud.drizzle.fill"
-        case 61...67: return "cloud.rain.fill"
-        case 71...77: return "cloud.snow.fill"
-        case 80...82: return "cloud.heavyrain.fill"
-        case 85, 86: return "cloud.snow.fill"
-        case 95, 96, 99: return "cloud.bolt.fill"
-        default: return "cloud.sun.fill"
-        }
     }
 }
