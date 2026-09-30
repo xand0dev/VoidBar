@@ -310,5 +310,10 @@ extension MediaController {
         self.isPlaying = isPlaying
         setAnchor(min(max(0, position), duration))
     }
+
+    /// Capture-only: nothing playing.
+    func clearDemo() {
+        clear()
+    }
 }
 #endif

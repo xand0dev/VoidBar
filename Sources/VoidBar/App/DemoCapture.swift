@@ -224,6 +224,14 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         let suite = "dev.xand0.VoidBar.capture"
         UserDefaults().removePersistentDomain(forName: suite)
         vm.tabManager = TabManager(defaults: UserDefaults(suiteName: suite) ?? .standard)
+        // Optional: record with a particular tab set, in order — to preview
+        // how the panel and its Overview look for a given setup.
+        if let list = ProcessInfo.processInfo.environment["VOIDBAR_CAPTURE_TABS"] {
+            let wanted = list.split(separator: ",").compactMap { NotchViewModel.Tab(rawValue: String($0)) }
+            let rest = NotchViewModel.Tab.allCases.filter { !wanted.contains($0) }
+            vm.tabManager.configs = wanted.map { .init(id: $0, isEnabled: true) }
+                + rest.map { .init(id: $0, isEnabled: false) }
+        }
 
         vm.media.showDemo(
             title: DemoScript.track.title,
@@ -313,6 +321,23 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
             settle()
             write(snapshot(), to: String(format: "gallery/%02d-%@.png", index + 1, tab.rawValue))
         }
+
+        // The Overview with nothing playing: the grid takes the whole width.
+        let artwork = vm.media.artwork
+        vm.media.clearDemo()
+        vm.tab = .home
+        settle()
+        write(snapshot(), to: "gallery/90-home-quiet.png")
+        vm.media.showDemo(
+            title: DemoScript.track.title,
+            artist: DemoScript.track.artist,
+            album: DemoScript.track.album,
+            source: DemoScript.source,
+            artwork: artwork,
+            duration: DemoScript.trackDuration,
+            position: DemoScript.trackStart,
+            isPlaying: true
+        )
         vm.tab = .media
         vm.timer.state = .idle
 
@@ -340,6 +365,8 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setUsageTabEnabled(_ enabled: Bool) {
+        // A tab set given for the recording is shown as it is.
+        guard ProcessInfo.processInfo.environment["VOIDBAR_CAPTURE_TABS"] == nil else { return }
         guard let manager = vm?.tabManager,
               let index = manager.configs.firstIndex(where: { $0.id == .usage }) else { return }
         manager.configs[index].isEnabled = enabled
