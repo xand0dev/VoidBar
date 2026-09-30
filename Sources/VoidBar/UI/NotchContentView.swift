@@ -114,6 +114,8 @@ struct NotchContentView: View {
             EmptyView()
         case .weather:
             EmptyView()
+        case .usage:
+            EmptyView()
         case .tasks:
             if !vm.tickTick.tasks.isEmpty {
                 counter(vm.tickTick.tasks.filter { !$0.isCompleted }.count)
@@ -191,6 +193,8 @@ struct NotchContentView: View {
             WeatherPane(weatherStore: vm.weather)
         case .tasks:
             TasksPane(store: vm.tickTick)
+        case .usage:
+            UsagePane(usage: vm.usage)
         }
     }
 }

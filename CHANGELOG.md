@@ -4,6 +4,10 @@ All notable changes to VoidBar are documented in this file. Versions before 0.6.
 
 ## [Unreleased]
 
+### Added
+
+- Usage tab with the five-hour and weekly plan limits of Claude Code and Codex, read locally from Codex session logs and from a Claude Code status line bridge (`VoidBar --claude-statusline`). Off by default.
+
 ## [0.6.0] - 2026-09-29
 
 The first public release: a downloadable, checksummed disk image built from source by GitHub Actions.

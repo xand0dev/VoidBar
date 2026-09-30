@@ -38,9 +38,11 @@ fps=15,scale=880:-1:flags=lanczos,split[a][b];\
 [b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
     -loop 0 "$ASSETS/walkthrough$SUFFIX.gif"
 
-ffmpeg -v error -y -i "$WORK/media@2x.png" -vf "\
+for still in media usage; do
+    ffmpeg -v error -y -i "$WORK/$still@2x.png" -vf "\
 split[a][b];[a]palettegen=max_colors=256[p];[b][p]paletteuse=dither=none" \
-    "$ASSETS/media$SUFFIX.png"
+        "$ASSETS/$still$SUFFIX.png"
+done
 
 if [ "$LANGUAGE" = en ]; then
     ffmpeg -v error -y -i "$WORK/social-preview@2x.png" -vf "\
@@ -48,6 +50,6 @@ scale=1280:640:flags=lanczos,split[a][b];[a]palettegen=max_colors=256[p];[b][p]p
         "$ASSETS/social-preview.png"
 fi
 
-for file in "$ASSETS"/walkthrough$SUFFIX.gif "$ASSETS"/media$SUFFIX.png; do
+for file in "$ASSETS"/walkthrough$SUFFIX.gif "$ASSETS"/media$SUFFIX.png "$ASSETS"/usage$SUFFIX.png; do
     echo "    $(basename "$file") $(du -h "$file" | cut -f1 | tr -d ' ')"
 done

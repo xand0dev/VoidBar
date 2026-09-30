@@ -85,3 +85,18 @@
    the parts in its own order. */
 "Screenshot" = "Screenshot";
 "yyyy-MM-dd 'at' HH.mm.ss" = "yyyy-MM-dd 'at' HH.mm.ss";
+
+/* Usage limits */
+"Usage" = "Usage";
+"5 hours" = "5 hours";
+"Week" = "Week";
+"Copied" = "Copied";
+"Copy setup" = "Copy setup";
+"Add VoidBar as the Claude Code status line to see Pro and Max limits here." = "Add VoidBar as the Claude Code status line to see Pro and Max limits here.";
+"Paste it into ~/.claude/settings.json." = "Paste it into ~/.claude/settings.json.";
+"No Codex session yet. Limits appear after the first response." = "No Codex session yet. Limits appear after the first response.";
+"Window has reset" = "Window has reset";
+"Resets in %@" = "Resets in %@";
+"Resets %@" = "Resets %@";
+"just now" = "just now";
+"%@ ago" = "%@ ago";
