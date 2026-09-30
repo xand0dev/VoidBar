@@ -177,3 +177,7 @@
 "Opening animations" = "Opening animations";
 "Appearance" = "Appearance";
 "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off." = "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off.";
+
+/* Usage freshness */
+"Updates when you use Claude Code in the terminal (claude CLI)." = "Updates when you use Claude Code in the terminal (claude CLI).";
+"Updates after your next Codex response." = "Updates after your next Codex response.";

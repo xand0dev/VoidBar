@@ -12,14 +12,18 @@ struct UsagePane: View {
                 symbol: "sparkle",
                 usage: usage.claude,
                 loaded: usage.loaded,
-                empty: .claudeSetup
+                empty: .claudeSetup,
+                now: usage.checkedAt,
+                staleHint: localized("Updates when you use Claude Code in the terminal (claude CLI).")
             )
             AgentCard(
                 name: "Codex",
                 symbol: "chevron.left.forwardslash.chevron.right",
                 usage: usage.codex,
                 loaded: usage.loaded,
-                empty: .codexMissing
+                empty: .codexMissing,
+                now: usage.checkedAt,
+                staleHint: localized("Updates after your next Codex response.")
             )
         }
         .padding(.top, 2)
@@ -43,6 +47,11 @@ private struct AgentCard: View {
     let usage: AgentUsage?
     let loaded: Bool
     let empty: Empty
+    /// The store's last read; a new value redraws the countdowns.
+    let now: Date
+    /// Said when the numbers are over an hour old: they only move when the
+    /// tool itself reports, which is easy to forget.
+    let staleHint: String
 
     @State private var copied = false
 
@@ -64,7 +73,7 @@ private struct AgentCard: View {
                 }
                 Spacer(minLength: 4)
                 if let usage {
-                    Text(UsageFormat.updated(usage.recordedAt))
+                    Text(UsageFormat.updated(usage.recordedAt, now: now))
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(Theme.tertiary)
                         .lineLimit(1)
@@ -72,13 +81,18 @@ private struct AgentCard: View {
             }
 
             if let usage {
-                // Read once per redraw, so both rows agree about "now".
-                let now = Date()
                 if let session = usage.session {
                     WindowRow(title: localized("5 hours"), window: session, now: now)
                 }
                 if let weekly = usage.weekly {
                     WindowRow(title: localized("Week"), window: weekly, now: now)
+                }
+                if now.timeIntervalSince(usage.recordedAt) > 3600 {
+                    Label(staleHint, systemImage: "clock.arrow.circlepath")
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(Theme.tertiary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             } else if loaded {
                 emptyState

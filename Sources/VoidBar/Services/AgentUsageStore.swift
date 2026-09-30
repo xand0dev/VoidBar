@@ -194,6 +194,10 @@ final class AgentUsageStore: ObservableObject {
     /// Whether the first read has finished — so the pane can tell "nothing
     /// yet" from "still looking".
     @Published private(set) var loaded = false
+    /// When the files were last read. Published on every read, even when the
+    /// numbers did not change, so "updated … ago", reset countdowns, and a
+    /// window that has just reset stay current on screen.
+    @Published private(set) var checkedAt = Date()
 
     private var refreshing = false
     #if DEBUG
@@ -215,6 +219,7 @@ final class AgentUsageStore: ObservableObject {
         if claude != self.claude { self.claude = claude }
         if codex != self.codex { self.codex = codex }
         loaded = true
+        checkedAt = Date()
     }
 
     /// The `statusLine` entry for `~/.claude/settings.json`, pointing at this

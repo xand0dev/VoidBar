@@ -173,3 +173,7 @@
 "Opening animations" = "Анімації відкриття";
 "Appearance" = "Вигляд";
 "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off." = "Сама панель лишається чорною, щоб зливатися з вирізом. Якщо в Системних параметрах → Доступність увімкнено «Зменшити рух», анімації вимкнені.";
+
+/* Usage freshness */
+"Updates when you use Claude Code in the terminal (claude CLI)." = "Оновлюється, коли ви працюєте з Claude Code у терміналі (claude CLI).";
+"Updates after your next Codex response." = "Оновиться після наступної відповіді Codex.";
