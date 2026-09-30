@@ -196,8 +196,16 @@ final class AgentUsageStore: ObservableObject {
     @Published private(set) var loaded = false
 
     private var refreshing = false
+    #if DEBUG
+    /// Set by `showDemo`: a capture must never pick up the recording
+    /// machine's real limits.
+    private var showsDemo = false
+    #endif
 
     func refresh() async {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         guard !refreshing else { return }
         refreshing = true
         defer { refreshing = false }
@@ -237,6 +245,7 @@ extension AgentUsageStore {
     /// Capture-only: invented limits. See `DemoCapture`; nothing in a normal
     /// launch reaches this.
     func showDemo(claude: AgentUsage?, codex: AgentUsage?) {
+        showsDemo = true
         self.claude = claude
         self.codex = codex
         loaded = true

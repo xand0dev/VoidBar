@@ -44,6 +44,25 @@ struct DemoScript {
         case select(NotchViewModel.Tab)
         case startTimer
         case type(String)
+        /// A new Codex response lands and the usage pane re-reads its limits.
+        case codexResponse
+    }
+
+    /// One recording: a named loop of timed steps.
+    struct Scene {
+        let name: String
+        let steps: [Step]
+        let length: TimeInterval
+        /// Shows the Usage tab in the rail, as after turning it on in Preferences.
+        let showsUsageTab: Bool
+
+        /// The tabs the scene visits, in order, for the caption strip.
+        var chapters: [NotchViewModel.Tab] {
+            [.media] + steps.compactMap {
+                if case .select(let tab) = $0.action { return tab }
+                return nil
+            }
+        }
     }
 
     struct Step: Equatable {
@@ -80,6 +99,20 @@ struct DemoScript {
 
     static let length: TimeInterval = 11.6
 
+    /// Music → Usage: open the panel, look at both agents' limits, watch a
+    /// fresh Codex response move the numbers, fold away.
+    static let usageTour: [Step] = [
+        Step(at: 0.8, action: .open),
+        Step(at: 2.0, action: .select(.usage)),
+        Step(at: 4.6, action: .codexResponse),
+        Step(at: 6.9, action: .close),
+    ]
+
+    static let scenes: [Scene] = [
+        Scene(name: "walkthrough", steps: walkthrough, length: length, showsUsageTab: false),
+        Scene(name: "usage-tour", steps: usageTour, length: 7.7, showsUsageTab: true),
+    ]
+
     /// Invented limits for the usage still, relative to the capture time so
     /// the reset countdowns read naturally.
     static func claudeUsage(now: Date = Date()) -> AgentUsage {
@@ -91,22 +124,17 @@ struct DemoScript {
         )
     }
 
-    static func codexUsage(now: Date = Date()) -> AgentUsage {
+    static func codexUsage(now: Date = Date(), afterResponse: Bool = false) -> AgentUsage {
         AgentUsage(
-            session: UsageWindow(usedPercent: 82, resetsAt: now.addingTimeInterval(47 * 60), minutes: 300),
-            weekly: UsageWindow(usedPercent: 24, resetsAt: now.addingTimeInterval(5 * 86400 + 2 * 3600), minutes: 10080),
+            session: UsageWindow(usedPercent: afterResponse ? 86 : 82, resetsAt: now.addingTimeInterval(47 * 60), minutes: 300),
+            weekly: UsageWindow(usedPercent: afterResponse ? 25 : 24, resetsAt: now.addingTimeInterval(5 * 86400 + 2 * 3600), minutes: 10080),
             plan: "plus",
-            recordedAt: now.addingTimeInterval(-9 * 60)
+            recordedAt: afterResponse ? now : now.addingTimeInterval(-9 * 60)
         )
     }
 
     /// The tabs the walkthrough visits, in order, for the caption strip.
-    static var chapters: [NotchViewModel.Tab] {
-        [.media] + walkthrough.compactMap {
-            if case .select(let tab) = $0.action { return tab }
-            return nil
-        }
-    }
+    static var chapters: [NotchViewModel.Tab] { scenes[0].chapters }
 }
 
 // MARK: - Recorder
@@ -119,11 +147,13 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
     private var stage: StageState?
     private var ticker: Timer?
     private var startedAt = Date()
-    private var pending: [DemoScript.Step] = DemoScript.walkthrough
+    private var sceneIndex = 0
+    private var scene: DemoScript.Scene { DemoScript.scenes[sceneIndex] }
+    private var pending: [DemoScript.Step] = []
     private var frames: [(file: String, at: TimeInterval)] = []
     private var typing: (text: String, from: TimeInterval)?
 
-    private let framesPerSecond = 20.0
+    private let framesPerSecond = 30.0
     /// PNG encoding is the slow part; off the main thread it does not delay
     /// the next frame or the animations being sampled.
     private let writer = DispatchQueue(label: "dev.xand0.VoidBar.capture.writer")
@@ -135,9 +165,11 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         do {
-            try FileManager.default.createDirectory(
-                at: directory.appendingPathComponent("frames"), withIntermediateDirectories: true
-            )
+            for scene in DemoScript.scenes {
+                try FileManager.default.createDirectory(
+                    at: directory.appendingPathComponent("frames-\(scene.name)"), withIntermediateDirectories: true
+                )
+            }
         } catch {
             fatalError("VoidBar capture: cannot create \(directory.path): \(error)")
         }
@@ -171,8 +203,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         // Give the first layout a moment before anything is recorded.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { [weak self] in
             self?.captureStills()
-            self?.resetForWalkthrough()
-            self?.startWalkthrough()
+            self?.startScene(0)
         }
     }
 
@@ -207,14 +238,19 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         return vm
     }
 
-    private func resetForWalkthrough() {
+    private func reset(for scene: DemoScript.Scene) {
         guard let vm else { return }
         vm.isOpen = false
         vm.tab = .media
         vm.timer.state = .idle
         vm.timer.selectDuration(25 * 60)
+        timerStartedAt = nil
         vm.translator.showDemo(input: "", output: "")
+        vm.usage.showDemo(claude: DemoScript.claudeUsage(), codex: DemoScript.codexUsage())
+        setUsageTabEnabled(scene.showsUsageTab)
+        stage?.chapters = scene.chapters
         stage?.chapter = 0
+        settle()
     }
 
     // MARK: Stills
@@ -263,7 +299,12 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: Walkthrough
 
-    private func startWalkthrough() {
+    private func startScene(_ index: Int) {
+        sceneIndex = index
+        reset(for: scene)
+        pending = scene.steps
+        frames = []
+        typing = nil
         startedAt = Date()
         let timer = Timer(timeInterval: 1 / framesPerSecond, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.tick() }
@@ -308,11 +349,11 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         }
 
         let name = String(format: "%04d.png", frames.count)
-        write(snapshot(), to: "frames/\(name)")
+        write(snapshot(), to: "frames-\(scene.name)/\(name)")
         frames.append((name, now))
 
-        if now >= DemoScript.length {
-            finish()
+        if now >= scene.length {
+            finishScene()
         }
     }
 
@@ -328,30 +369,40 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
             stage.chapter = nil
         case .select(let tab):
             vm.tab = tab
-            stage.chapter = DemoScript.chapters.firstIndex(of: tab)
+            stage.chapter = scene.chapters.firstIndex(of: tab)
         case .startTimer:
             vm.timer.state = .running
             timerStartedAt = now
         case .type(let text):
             typing = (text, now)
+        case .codexResponse:
+            vm.usage.showDemo(claude: vm.usage.claude, codex: DemoScript.codexUsage(afterResponse: true))
         }
     }
 
-    private func finish() {
+    private func finishScene() {
         ticker?.invalidate()
         ticker = nil
         writer.sync {}
         // ffmpeg's concat demuxer: each frame lasts until the next one began.
+        let folder = "frames-\(scene.name)"
         var list = "ffconcat version 1.0\n"
         for (index, frame) in frames.enumerated() {
-            let next = index + 1 < frames.count ? frames[index + 1].at : DemoScript.length + 0.05
-            list += "file 'frames/\(frame.file)'\nduration \(String(format: "%.4f", max(0.01, next - frame.at)))\n"
+            let next = index + 1 < frames.count ? frames[index + 1].at : scene.length + 0.05
+            list += "file '\(folder)/\(frame.file)'\nduration \(String(format: "%.4f", max(0.01, next - frame.at)))\n"
         }
-        if let last = frames.last { list += "file 'frames/\(last.file)'\n" }
-        try? list.write(to: directory.appendingPathComponent("frames.ffconcat"), atomically: true, encoding: .utf8)
-        print("VoidBar capture: \(frames.count) frames in \(directory.path)")
-        UserDefaults().removePersistentDomain(forName: "dev.xand0.VoidBar.capture")
-        NSApp.terminate(nil)
+        if let last = frames.last { list += "file '\(folder)/\(last.file)'\n" }
+        try? list.write(
+            to: directory.appendingPathComponent("\(scene.name).ffconcat"), atomically: true, encoding: .utf8
+        )
+        print("VoidBar capture: \(scene.name), \(frames.count) frames over \(scene.length) s")
+
+        if sceneIndex + 1 < DemoScript.scenes.count {
+            startScene(sceneIndex + 1)
+        } else {
+            UserDefaults().removePersistentDomain(forName: "dev.xand0.VoidBar.capture")
+            NSApp.terminate(nil)
+        }
     }
 
     // MARK: Pixels
@@ -381,7 +432,8 @@ private final class StageState: ObservableObject {
     enum Layout { case walkthrough, social }
     @Published var layout: Layout = .walkthrough
     @Published var showsCaption = true
-    /// Index into `DemoScript.chapters`, or nil once the panel folds away.
+    @Published var chapters: [NotchViewModel.Tab] = DemoScript.chapters
+    /// Index into `chapters`, or nil once the panel folds away.
     @Published var chapter: Int? = 0
 }
 
@@ -466,7 +518,7 @@ private struct DemoStage: View {
 
     private var captions: some View {
         HStack(spacing: 10) {
-            ForEach(Array(DemoScript.chapters.enumerated()), id: \.offset) { index, tab in
+            ForEach(Array(stage.chapters.enumerated()), id: \.offset) { index, tab in
                 if index > 0 {
                     Image(systemName: "chevron.right")
                         .font(.system(size: 8, weight: .bold))
