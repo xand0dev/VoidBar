@@ -63,13 +63,23 @@ struct MediaPane: View {
 
     /// Soft light in the cover's own colour, spilling from behind it — the
     /// panel takes on the mood of what is playing without a single extra word.
+    ///
+    /// Centred on the cover and fully faded before any edge of the pane, which
+    /// clips its content: light that reached an edge would draw a rectangle.
     private var ambientLight: some View {
-        RadialGradient(
-            colors: [(glow ?? .clear).opacity(0.34), .clear],
-            center: UnitPoint(x: 0.12, y: 0.5),
-            startRadius: 4,
-            endRadius: 230
+        let tint = glow ?? .clear
+        return RadialGradient(
+            stops: [
+                .init(color: tint.opacity(0.42), location: 0),
+                .init(color: tint.opacity(0.16), location: 0.5),
+                .init(color: tint.opacity(0), location: 0.82),
+            ],
+            center: .center,
+            startRadius: 0,
+            endRadius: 82
         )
+        .frame(width: 164, height: 164)
+        .offset(x: 4 + blockHeight / 2 - 82)
         .allowsHitTesting(false)
     }
 
