@@ -86,7 +86,7 @@ Release images are built from the tagged source by [GitHub Actions](.github/work
 
 ## Coding agent limits
 
-![VoidBar Usage tab with Claude Code and Codex plan limits (demo numbers)](docs/assets/usage.png)
+![VoidBar Usage tab: Claude Code and Codex plan limits, updating after a new Codex response (demo numbers)](docs/assets/usage-tour.gif)
 
 The Usage tab reads numbers the tools already produce, on this Mac, without any network request or sign-in:
 

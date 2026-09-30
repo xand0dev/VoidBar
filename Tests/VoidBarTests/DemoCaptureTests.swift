@@ -41,6 +41,21 @@ final class DemoCaptureTests: XCTestCase {
         XCTAssertEqual(translator.output, "Привіт")
     }
 
+    func testDemoUsageIsNotReplacedByRealFiles() async {
+        let usage = AgentUsageStore()
+        let invented = DemoScript.codexUsage()
+        usage.showDemo(claude: nil, codex: invented)
+        await usage.refresh()
+        XCTAssertEqual(usage.codex, invented)
+        XCTAssertNil(usage.claude)
+    }
+
+    func testUsageTourVisitsUsage() {
+        let tour = DemoScript.scenes.first { $0.name == "usage-tour" }
+        XCTAssertEqual(tour?.chapters, [.media, .usage])
+        XCTAssertEqual(tour?.steps.last?.action, .close)
+    }
+
     func testDemoMediaShowsInventedTrack() {
         let media = MediaController()
         media.showDemo(

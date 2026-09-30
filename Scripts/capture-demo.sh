@@ -30,13 +30,22 @@ VOIDBAR_CAPTURE_DIR="$WORK" \
     -AppleLanguages "($LANGUAGE)" -AppleShowScrollBars WhenScrolling
 
 echo "==> encoding"
-# Only the changed rectangle of each frame is stored, which is what keeps a
-# mostly still panel small.
-ffmpeg -v error -y -f concat -i "$WORK/frames.ffconcat" -vf "\
+# GIFs for the README: only the changed rectangle of each frame is stored,
+# which is what keeps a mostly still panel small. MP4s at full resolution go to
+# build/media for posts and launch pages; they are not committed.
+MEDIA="$ROOT/build/media"
+mkdir -p "$MEDIA"
+for scene in walkthrough usage-tour; do
+    ffmpeg -v error -y -f concat -i "$WORK/$scene.ffconcat" -vf "\
 fps=15,scale=880:-1:flags=lanczos,split[a][b];\
 [a]palettegen=max_colors=96:stats_mode=diff:reserve_transparent=0[p];\
 [b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
-    -loop 0 "$ASSETS/walkthrough$SUFFIX.gif"
+        -loop 0 "$ASSETS/$scene$SUFFIX.gif"
+    ffmpeg -v error -y -f concat -i "$WORK/$scene.ffconcat" \
+        -vf "fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
+        -c:v libx264 -preset slow -crf 14 -tune animation -movflags +faststart -an \
+        "$MEDIA/$scene$SUFFIX.mp4"
+done
 
 for still in media usage; do
     ffmpeg -v error -y -i "$WORK/$still@2x.png" -vf "\
@@ -50,6 +59,7 @@ scale=1280:640:flags=lanczos,split[a][b];[a]palettegen=max_colors=256[p];[b][p]p
         "$ASSETS/social-preview.png"
 fi
 
-for file in "$ASSETS"/walkthrough$SUFFIX.gif "$ASSETS"/media$SUFFIX.png "$ASSETS"/usage$SUFFIX.png; do
+for file in "$ASSETS"/walkthrough$SUFFIX.gif "$ASSETS"/usage-tour$SUFFIX.gif \
+    "$ASSETS"/media$SUFFIX.png "$ASSETS"/usage$SUFFIX.png "$MEDIA"/*$SUFFIX.mp4; do
     echo "    $(basename "$file") $(du -h "$file" | cut -f1 | tr -d ' ')"
 done
