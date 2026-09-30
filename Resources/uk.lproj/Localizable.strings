@@ -81,3 +81,18 @@
 /* Збережені знімки. */
 "Screenshot" = "Знімок";
 "yyyy-MM-dd 'at' HH.mm.ss" = "yyyy-MM-dd 'о' HH.mm.ss";
+
+/* Ліміти агентів */
+"Usage" = "Ліміти";
+"5 hours" = "5 годин";
+"Week" = "Тиждень";
+"Copied" = "Скопійовано";
+"Copy setup" = "Скопіювати налаштування";
+"Add VoidBar as the Claude Code status line to see Pro and Max limits here." = "Додайте VoidBar як status line у Claude Code, щоб бачити тут ліміти Pro і Max.";
+"Paste it into ~/.claude/settings.json." = "Вставте його у ~/.claude/settings.json.";
+"No Codex session yet. Limits appear after the first response." = "Сесій Codex ще немає. Ліміти з'являться після першої відповіді.";
+"Window has reset" = "Вікно ліміту оновилося";
+"Resets in %@" = "Скидання через %@";
+"Resets %@" = "Скидання: %@";
+"just now" = "щойно";
+"%@ ago" = "%@ тому";

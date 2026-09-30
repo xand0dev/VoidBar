@@ -4,7 +4,7 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable, Codable {
-        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks
+        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks, usage
         var id: String { rawValue }
 
         var symbol: String {
@@ -21,6 +21,7 @@ final class NotchViewModel: ObservableObject {
             case .monitor: return "cpu"
             case .weather: return "cloud.sun"
             case .tasks: return "checkmark.circle"
+            case .usage: return "gauge.with.dots.needle.33percent"
             }
         }
 
@@ -38,8 +39,14 @@ final class NotchViewModel: ObservableObject {
             case .monitor: return localized("Monitor")
             case .weather: return localized("Weather")
             case .tasks: return localized("Tasks")
+            case .usage: return localized("Usage")
             }
         }
+
+        /// Off until chosen in Preferences: the system monitor is for the few
+        /// who want it, and the usage tab only means something to people who
+        /// run Claude Code or Codex.
+        var enabledByDefault: Bool { self != .monitor && self != .usage }
 
         /// Tabs with a field in them. Landing on one hands it the keyboard, so
         /// that arriving and typing is a single move.
@@ -102,6 +109,7 @@ final class NotchViewModel: ObservableObject {
     let monitor: SystemMonitorStore
     let weather: WeatherStore
     let tickTick: TickTickStore
+    let usage: AgentUsageStore
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -119,6 +127,7 @@ final class NotchViewModel: ObservableObject {
         self.monitor = SystemMonitorStore()
         self.weather = WeatherStore()
         self.tickTick = TickTickStore()
+        self.usage = AgentUsageStore()
 
         // The panel header reads through to the stores — counters, the source
         // name, the equalizer. Nested ObservableObjects do not propagate on

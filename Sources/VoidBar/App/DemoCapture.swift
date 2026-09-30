@@ -80,6 +80,26 @@ struct DemoScript {
 
     static let length: TimeInterval = 11.6
 
+    /// Invented limits for the usage still, relative to the capture time so
+    /// the reset countdowns read naturally.
+    static func claudeUsage(now: Date = Date()) -> AgentUsage {
+        AgentUsage(
+            session: UsageWindow(usedPercent: 38, resetsAt: now.addingTimeInterval(2 * 3600 + 14 * 60), minutes: 300),
+            weekly: UsageWindow(usedPercent: 61, resetsAt: now.addingTimeInterval(3 * 86400 + 5 * 3600), minutes: 10080),
+            plan: nil,
+            recordedAt: now.addingTimeInterval(-3 * 60)
+        )
+    }
+
+    static func codexUsage(now: Date = Date()) -> AgentUsage {
+        AgentUsage(
+            session: UsageWindow(usedPercent: 82, resetsAt: now.addingTimeInterval(47 * 60), minutes: 300),
+            weekly: UsageWindow(usedPercent: 24, resetsAt: now.addingTimeInterval(5 * 86400 + 2 * 3600), minutes: 10080),
+            plan: "plus",
+            recordedAt: now.addingTimeInterval(-9 * 60)
+        )
+    }
+
     /// The tabs the walkthrough visits, in order, for the caption strip.
     static var chapters: [NotchViewModel.Tab] {
         [.media] + walkthrough.compactMap {
@@ -208,6 +228,16 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         settle()
         write(snapshot(), to: "media@2x.png")
 
+        // The usage tab is off by default; switch it on in the capture's own
+        // defaults suite so the rail shows it selected, then put it back.
+        setUsageTabEnabled(true)
+        vm.usage.showDemo(claude: DemoScript.claudeUsage(), codex: DemoScript.codexUsage())
+        vm.tab = .usage
+        settle()
+        write(snapshot(), to: "usage@2x.png")
+        vm.tab = .media
+        setUsageTabEnabled(false)
+
         // The social card is a different canvas: the panel with a title.
         stage.layout = .social
         window?.setContentSize(CGSize(width: 960, height: 480))
@@ -218,6 +248,12 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         stage.showsCaption = true
         window?.setContentSize(stageSize)
         settle()
+    }
+
+    private func setUsageTabEnabled(_ enabled: Bool) {
+        guard let manager = vm?.tabManager,
+              let index = manager.configs.firstIndex(where: { $0.id == .usage }) else { return }
+        manager.configs[index].isEnabled = enabled
     }
 
     /// Lets pending layout and animations finish before a still is taken.

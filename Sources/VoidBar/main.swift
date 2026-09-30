@@ -1,5 +1,11 @@
 import AppKit
 
+// Claude Code status line bridge: read stdin, keep the limits, print a line,
+// exit — no app, no window. See ClaudeStatusBridge.
+if CommandLine.arguments.dropFirst().first == ClaudeStatusBridge.argument {
+    exit(ClaudeStatusBridge.run())
+}
+
 // Top-level code runs on the main thread; make that explicit for the compiler.
 MainActor.assumeIsolated {
     let app = NSApplication.shared

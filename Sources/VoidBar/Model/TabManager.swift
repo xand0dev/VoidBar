@@ -29,7 +29,7 @@ final class TabManager: ObservableObject {
             let savedIds = Set(saved.map { $0.id })
             for tab in NotchViewModel.Tab.allCases {
                 if !savedIds.contains(tab) {
-                    merged.append(TabConfig(id: tab, isEnabled: true))
+                    merged.append(TabConfig(id: tab, isEnabled: tab.enabledByDefault))
                 }
             }
             // Remove any tabs that no longer exist (if they were removed from the enum, though decoding would fail anyway)
@@ -37,7 +37,7 @@ final class TabManager: ObservableObject {
         } else {
             // Default configuration
             self.configs = NotchViewModel.Tab.allCases.map { 
-                TabConfig(id: $0, isEnabled: $0 != .monitor) 
+                TabConfig(id: $0, isEnabled: $0.enabledByDefault)
             }
         }
     }
