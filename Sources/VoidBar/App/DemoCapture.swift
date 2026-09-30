@@ -274,6 +274,8 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         vm.tab = .media
         setUsageTabEnabled(false)
 
+        captureGallery()
+
         // The social card is a different canvas: the panel with a title.
         stage.layout = .social
         window?.setContentSize(CGSize(width: 960, height: 480))
@@ -283,6 +285,35 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         stage.layout = .walkthrough
         stage.showsCaption = true
         window?.setContentSize(stageSize)
+        settle()
+    }
+
+    /// One still per tab, every tab switched on, plus the folded island —
+    /// the before/after material for design reviews.
+    private func captureGallery() {
+        guard let vm else { return }
+        try? FileManager.default.createDirectory(
+            at: directory.appendingPathComponent("gallery"), withIntermediateDirectories: true
+        )
+        let manager = vm.tabManager
+        let saved = manager.configs
+        manager.configs = saved.map { TabManager.TabConfig(id: $0.id, isEnabled: true) }
+        DemoGallery.fill(vm)
+
+        vm.isOpen = false
+        vm.timer.state = .running
+        settle()
+        write(snapshot(), to: "gallery/00-collapsed.png")
+
+        vm.isOpen = true
+        for (index, tab) in NotchViewModel.Tab.allCases.enumerated() {
+            vm.tab = tab
+            settle()
+            write(snapshot(), to: String(format: "gallery/%02d-%@.png", index + 1, tab.rawValue))
+        }
+        vm.tab = .media
+        vm.timer.state = .idle
+        manager.configs = saved
         settle()
     }
 
@@ -555,6 +586,81 @@ private struct DemoStage: View {
         }
         .padding(.bottom, 18)
         .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Gallery content
+
+/// Invented content for every tab. Stores switched into demo mode stop
+/// reading and writing their real files, calendars, and network sources.
+@MainActor
+enum DemoGallery {
+    static func fill(_ vm: NotchViewModel) {
+        let now = Date()
+        vm.shelf.showDemo([
+            ("Launch checklist.pdf", NSWorkspace.shared.icon(for: .pdf)),
+            ("Hero shot.png", DemoArtwork.make(side: 256)),
+            ("Release notes.md", NSWorkspace.shared.icon(for: .plainText)),
+            ("VoidBar-0.6.0-arm64.dmg", NSWorkspace.shared.icon(for: .diskImage)),
+            ("Roadmap.key", NSWorkspace.shared.icon(for: .presentation)),
+        ])
+        vm.snippets.showDemo([
+            Snippet(label: "Email", text: "hello@example.com"),
+            Snippet(label: "Repository", text: "https://github.com/xand0dev/VoidBar"),
+            Snippet(label: "Office", text: "+1 555 010 0199"),
+            Snippet(label: "Sign-off", text: "Thanks — talk soon."),
+        ])
+        vm.notes.showDemo([
+            "Release checklist\n– Tag v0.6.0\n– Upload the social preview\n– Draft the Show HN post",
+            "Menu bar quick toggles?",
+            "Call the design team at 16:00",
+        ])
+        let calendar = Foundation.Calendar.current
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now)) ?? now
+        vm.calendar.showDemo([
+            .init(id: "1", title: "Design review", start: now.addingTimeInterval(25 * 60),
+                  end: now.addingTimeInterval(55 * 60), calendarColor: .systemBlue,
+                  link: URL(string: "https://example.com/meet"), provider: "Zoom"),
+            .init(id: "2", title: "Launch sync", start: now.addingTimeInterval(3 * 3600),
+                  end: now.addingTimeInterval(3.5 * 3600), calendarColor: .systemPurple, link: nil, provider: nil),
+            .init(id: "3", title: "Standup", start: tomorrow.addingTimeInterval(10.5 * 3600),
+                  end: tomorrow.addingTimeInterval(10.75 * 3600), calendarColor: .systemGreen, link: nil, provider: nil),
+            .init(id: "4", title: "1:1 with Alex", start: tomorrow.addingTimeInterval(14 * 3600),
+                  end: tomorrow.addingTimeInterval(14.5 * 3600), calendarColor: .systemOrange, link: nil, provider: nil),
+        ])
+        vm.timer.selectDuration(25 * 60)
+        vm.timer.timeRemaining = 18 * 60 + 42
+        vm.timer.completedToday = 3
+        vm.translator.showDemo(input: DemoScript.translationInput, output: DemoScript.translationOutput)
+        let codes = [2, 2, 1, 0, 0, 1, 3, 3, 61, 61, 3, 2]
+        let hour = calendar.dateInterval(of: .hour, for: now)?.start ?? now
+        vm.weather.showDemo(WeatherData(
+            temperature: 18.4,
+            condition: 2,
+            locationName: "Lisbon",
+            hourly: codes.enumerated().map { index, code in
+                HourlyWeather(
+                    time: hour.addingTimeInterval(Double(index) * 3600),
+                    temperature: 18.4 + sin(Double(index) / 2) * 2.5,
+                    condition: code
+                )
+            }
+        ))
+        vm.tickTick.showDemo([
+            TickTickTask(id: "a", title: "Record the new README walkthrough", isCompleted: false,
+                         dueDate: now, priority: 5),
+            TickTickTask(id: "b", title: "Reply to the Product Hunt comments", isCompleted: false,
+                         dueDate: now.addingTimeInterval(86400), priority: 3),
+            TickTickTask(id: "c", title: "Review the translation strings", isCompleted: false,
+                         dueDate: nil, priority: 1),
+            TickTickTask(id: "d", title: "Tag v0.6.0", isCompleted: true, dueDate: now, priority: 0),
+        ])
+        vm.monitor.cpuUsage = 23.4
+        vm.monitor.memoryUsage = 61.2
+        vm.monitor.networkDownloadSpeed = 2.4 * 1024 * 1024
+        vm.monitor.networkUploadSpeed = 320 * 1024
+        vm.teleprompter.text = "Hi, I'm showing VoidBar today. It lives in the MacBook notch, opens when you hover, and gets out of the way when you leave."
+        vm.usage.showDemo(claude: DemoScript.claudeUsage(), codex: DemoScript.codexUsage())
     }
 }
 

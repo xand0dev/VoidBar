@@ -29,6 +29,13 @@ VOIDBAR_CAPTURE_DIR="$WORK" \
     "$ROOT/build/VoidBar.app/Contents/MacOS/VoidBar" \
     -AppleLanguages "($LANGUAGE)" -AppleShowScrollBars WhenScrolling
 
+# Optional: keep the per-tab stills for design reviews.
+if [ -n "${VOIDBAR_GALLERY_OUT:-}" ]; then
+    mkdir -p "$VOIDBAR_GALLERY_OUT"
+    cp "$WORK"/gallery/*.png "$VOIDBAR_GALLERY_OUT"/
+    echo "==> gallery: $(ls "$WORK"/gallery | wc -l | tr -d ' ') stills"
+fi
+
 echo "==> encoding"
 # GIFs for the README: only the changed rectangle of each frame is stored,
 # which is what keeps a mostly still panel small. MP4s at full resolution go to

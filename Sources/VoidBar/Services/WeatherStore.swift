@@ -21,8 +21,15 @@ final class WeatherStore: ObservableObject {
     @Published var error: String?
 
     private var timer: Timer?
+    #if DEBUG
+    /// Set by `showDemo`: no location or forecast request is made.
+    fileprivate(set) var showsDemo = false
+    #endif
 
     func start() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         stop()
         // Poll every 30 minutes
         timer = Timer.scheduledTimer(withTimeInterval: 1800, repeats: true) { [weak self] _ in
@@ -104,3 +111,14 @@ final class WeatherStore: ObservableObject {
         }
     }
 }
+
+#if DEBUG
+extension WeatherStore {
+    /// Capture-only: an invented forecast. See `DemoCapture`.
+    func showDemo(_ demo: WeatherData) {
+        showsDemo = true
+        weather = demo
+        error = nil
+    }
+}
+#endif

@@ -143,3 +143,14 @@ final class ShelfStore: ObservableObject {
         UserDefaults.standard.set(items.map(\.url.path), forKey: defaultsKey)
     }
 }
+
+#if DEBUG
+extension ShelfStore {
+    /// Capture-only: invented cards with their own images; the paths do not
+    /// exist and nothing is persisted. See `DemoCapture`.
+    func showDemo(_ demo: [(name: String, icon: NSImage)]) {
+        items = demo.map { ShelfItem(url: URL(fileURLWithPath: "/Demo/\($0.name)"), icon: $0.icon) }
+        selection = []
+    }
+}
+#endif
