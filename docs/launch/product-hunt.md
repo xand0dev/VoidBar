@@ -38,5 +38,6 @@ I'd love to hear which tabs you'd actually keep and what feels missing.
 
 - [ ] Thumbnail 240×240: the VoidBar app icon (`Resources/AppIcon.icns`, exported to PNG)
 - [ ] Gallery 1270×760, recorded with `Scripts/capture-demo.sh`: media, timer, translation, clipboard
-- [ ] Walkthrough GIF: `docs/assets/walkthrough.gif`
+- [ ] Walkthrough GIF: `docs/assets/walkthrough.gif`; Usage tab: `docs/assets/usage-tour.gif` or the still `docs/assets/usage.png`
+- [ ] Full-resolution MP4s for the gallery and social posts: run `./Scripts/capture-demo.sh`, then use `build/media/walkthrough.mp4` and `build/media/usage-tour.mp4`
 - [ ] No third-party album artwork, player logos, or personal data in any image
