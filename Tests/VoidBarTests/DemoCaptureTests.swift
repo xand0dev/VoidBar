@@ -14,7 +14,7 @@ final class DemoCaptureTests: XCTestCase {
     }
 
     func testWalkthroughTellsTheREADMEStory() {
-        XCTAssertEqual(DemoScript.chapters, [.media, .timer, .translate, .clipboard])
+        XCTAssertEqual(DemoScript.chapters, [.home, .timer, .translate, .clipboard])
     }
 
     func testWalkthroughStepsAreOrderedAndFitTheLoop() {
@@ -52,7 +52,7 @@ final class DemoCaptureTests: XCTestCase {
 
     func testUsageTourVisitsUsage() {
         let tour = DemoScript.scenes.first { $0.name == "usage-tour" }
-        XCTAssertEqual(tour?.chapters, [.media, .usage])
+        XCTAssertEqual(tour?.chapters, [.home, .usage])
         XCTAssertEqual(tour?.steps.last?.action, .close)
     }
 

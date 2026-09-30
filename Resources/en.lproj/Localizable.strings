@@ -141,3 +141,12 @@
 "Today" = "Today";
 "Version %@" = "Version %@";
 "Weather is unavailable" = "Weather is unavailable";
+
+/* Overview */
+"Overview" = "Overview";
+"Now playing" = "Now playing";
+"Next" = "Next";
+"Connect in Calendar" = "Connect in Calendar";
+"Open Weather to turn it on" = "Open Weather to turn it on";
+"5-hour limits" = "5-hour limits";
+"Last copied" = "Last copied";

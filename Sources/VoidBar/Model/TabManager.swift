@@ -27,9 +27,13 @@ final class TabManager: ObservableObject {
            let saved = try? JSONDecoder().decode([TabConfig].self, from: data) {
             var merged = saved
             let savedIds = Set(saved.map { $0.id })
-            for tab in NotchViewModel.Tab.allCases {
-                if !savedIds.contains(tab) {
-                    merged.append(TabConfig(id: tab, isEnabled: tab.enabledByDefault))
+            for tab in NotchViewModel.Tab.allCases where !savedIds.contains(tab) {
+                // The overview leads the rail; other new tabs join at the end.
+                let config = TabConfig(id: tab, isEnabled: tab.enabledByDefault)
+                if tab == .home {
+                    merged.insert(config, at: 0)
+                } else {
+                    merged.append(config)
                 }
             }
             // Remove any tabs that no longer exist (if they were removed from the enum, though decoding would fail anyway)

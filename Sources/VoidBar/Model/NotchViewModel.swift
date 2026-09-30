@@ -4,11 +4,12 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable, Codable {
-        case media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks, usage
+        case home, media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks, usage
         var id: String { rawValue }
 
         var symbol: String {
             switch self {
+            case .home: return "square.grid.2x2.fill"
             case .media: return "music.note"
             case .shelf: return "tray.full.fill"
             case .clipboard: return "list.clipboard.fill"
@@ -27,6 +28,7 @@ final class NotchViewModel: ObservableObject {
 
         var title: String {
             switch self {
+            case .home: return localized("Overview")
             case .media: return localized("Music")
             case .shelf: return localized("Shelf")
             case .clipboard: return localized("Clipboard")
@@ -64,7 +66,7 @@ final class NotchViewModel: ObservableObject {
         }
     }
     @Published var isDropTargeted = false
-    @Published var tab: Tab = .media {
+    @Published var tab: Tab = .home {
         didSet {
             // Opening the tab only re-checks the status. The permission prompt
             // is the user's own press on the button inside the pane: this is
@@ -128,6 +130,9 @@ final class NotchViewModel: ObservableObject {
         self.weather = WeatherStore()
         self.tickTick = TickTickStore()
         self.usage = AgentUsageStore()
+        // Open on the first tab of the rail — the overview, unless it was
+        // switched off or moved.
+        tab = tabManager.activeTabs.first ?? .media
 
         // The panel header reads through to the stores — counters, the source
         // name, the equalizer. Nested ObservableObjects do not propagate on

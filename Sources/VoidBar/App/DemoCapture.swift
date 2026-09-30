@@ -56,9 +56,10 @@ struct DemoScript {
         /// Shows the Usage tab in the rail, as after turning it on in Preferences.
         let showsUsageTab: Bool
 
-        /// The tabs the scene visits, in order, for the caption strip.
+        /// The tabs the scene visits, in order, for the caption strip. The
+        /// panel opens on the overview.
         var chapters: [NotchViewModel.Tab] {
-            [.media] + steps.compactMap {
+            [.home] + steps.compactMap {
                 if case .select(let tab) = $0.action { return tab }
                 return nil
             }
@@ -86,18 +87,18 @@ struct DemoScript {
         .text("Design review moved to Thursday, 15:00"),
     ]
 
-    /// Music → Focus Timer → Translation → Clipboard, then fold away.
+    /// Overview → Focus Timer → Translation → Clipboard, then fold away.
     static let walkthrough: [Step] = [
-        Step(at: 0.9, action: .open),
-        Step(at: 3.2, action: .select(.timer)),
-        Step(at: 4.0, action: .startTimer),
-        Step(at: 5.9, action: .select(.translate)),
-        Step(at: 6.3, action: .type(translationInput)),
-        Step(at: 8.9, action: .select(.clipboard)),
-        Step(at: 10.8, action: .close),
+        Step(at: 1.2, action: .open),
+        Step(at: 4.1, action: .select(.timer)),
+        Step(at: 4.8, action: .startTimer),
+        Step(at: 6.5, action: .select(.translate)),
+        Step(at: 6.9, action: .type(translationInput)),
+        Step(at: 9.4, action: .select(.clipboard)),
+        Step(at: 11.2, action: .close),
     ]
 
-    static let length: TimeInterval = 11.6
+    static let length: TimeInterval = 11.95
 
     /// Music → Usage: open the panel, look at both agents' limits, watch a
     /// fresh Codex response move the numbers, fold away.
@@ -157,7 +158,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
     /// PNG encoding is the slow part; off the main thread it does not delay
     /// the next frame or the animations being sampled.
     private let writer = DispatchQueue(label: "dev.xand0.VoidBar.capture.writer")
-    private let stageSize = CGSize(width: 800, height: 330)
+    private let stageSize = CGSize(width: 860, height: 352)
 
     init(directory: URL) {
         self.directory = directory
@@ -241,7 +242,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
     private func reset(for scene: DemoScript.Scene) {
         guard let vm else { return }
         vm.isOpen = false
-        vm.tab = .media
+        vm.tab = .home
         vm.timer.state = .idle
         vm.timer.selectDuration(25 * 60)
         timerStartedAt = nil
@@ -260,7 +261,7 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
         vm.tab = .media
         vm.isOpen = true
         stage.showsCaption = false
-        window?.setContentSize(CGSize(width: stageSize.width, height: 282))
+        window?.setContentSize(CGSize(width: stageSize.width, height: 302))
         settle()
         write(snapshot(), to: "media@2x.png")
 
@@ -276,7 +277,8 @@ private final class DemoCaptureDelegate: NSObject, NSApplicationDelegate {
 
         captureGallery()
 
-        // The social card is a different canvas: the panel with a title.
+        // The social card is a different canvas: the overview with a title.
+        vm.tab = .home
         stage.layout = .social
         window?.setContentSize(CGSize(width: 960, height: 480))
         settle()

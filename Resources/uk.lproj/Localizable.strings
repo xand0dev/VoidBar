@@ -137,3 +137,12 @@
 "Today" = "Сьогодні";
 "Version %@" = "Версія %@";
 "Weather is unavailable" = "Погода недоступна";
+
+/* Overview */
+"Overview" = "Огляд";
+"Now playing" = "Зараз грає";
+"Next" = "Далі";
+"Connect in Calendar" = "Підключіть у Календарі";
+"Open Weather to turn it on" = "Відкрийте Погоду, щоб увімкнути";
+"5-hour limits" = "Ліміти на 5 годин";
+"Last copied" = "Останнє скопійоване";

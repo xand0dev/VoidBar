@@ -1,5 +1,4 @@
 import SwiftUI
-import CoreImage
 
 struct MediaPane: View {
     @ObservedObject var media: MediaController
@@ -7,8 +6,6 @@ struct MediaPane: View {
     @State private var scrubHover = false
     /// Set while dragging, so the bar follows the finger instead of the clock.
     @State private var scrubbing: Double?
-    /// The artwork's average colour, which tints the light behind it.
-    @State private var glow: Color?
 
     /// Artwork and the text column share this height, so their top and bottom
     /// edges line up instead of the column floating past them.
@@ -42,10 +39,6 @@ struct MediaPane: View {
             // Title and artist arrive together, so the whole column can cross-
             // fade as one unit when the track changes.
             .animation(Theme.artworkAnimation, value: track.key)
-            .onAppear { glow = media.artwork.flatMap(ArtworkTint.average) }
-            .onChange(of: media.artwork) { _, image in
-                withAnimation(Theme.artworkAnimation) { glow = image.flatMap(ArtworkTint.average) }
-            }
         } else {
             EmptyState(symbol: "music.note", title: localized("Nothing is playing"))
         }
@@ -67,7 +60,7 @@ struct MediaPane: View {
     /// Centred on the cover and fully faded before any edge of the pane, which
     /// clips its content: light that reached an edge would draw a rectangle.
     private var ambientLight: some View {
-        let tint = glow ?? .clear
+        let tint = media.artworkPalette?.first ?? .clear
         return RadialGradient(
             stops: [
                 .init(color: tint.opacity(0.42), location: 0),
@@ -191,37 +184,5 @@ struct MediaPane: View {
                 .buttonStyle(NotchButtonStyle(size: 34))
         }
         .frame(maxWidth: .infinity)
-    }
-}
-
-/// Average colour of a cover, brightened a little so dark artwork still gives
-/// off some light.
-enum ArtworkTint {
-    private static let context = CIContext(options: [.workingColorSpace: NSNull()])
-
-    static func average(_ image: NSImage) -> Color? {
-        guard let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
-        let input = CIImage(cgImage: cgImage)
-        guard let filter = CIFilter(name: "CIAreaAverage", parameters: [
-            kCIInputImageKey: input,
-            kCIInputExtentKey: CIVector(cgRect: input.extent),
-        ]), let output = filter.outputImage else { return nil }
-
-        var pixel = [UInt8](repeating: 0, count: 4)
-        context.render(
-            output,
-            toBitmap: &pixel,
-            rowBytes: 4,
-            bounds: CGRect(x: 0, y: 0, width: 1, height: 1),
-            format: .RGBA8,
-            colorSpace: nil
-        )
-        let color = NSColor(
-            red: CGFloat(pixel[0]) / 255, green: CGFloat(pixel[1]) / 255,
-            blue: CGFloat(pixel[2]) / 255, alpha: 1
-        )
-        var hue: CGFloat = 0, saturation: CGFloat = 0, brightness: CGFloat = 0, alpha: CGFloat = 0
-        color.usingColorSpace(.deviceRGB)?.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
-        return Color(hue: hue, saturation: min(1, saturation * 1.2), brightness: max(0.55, brightness))
     }
 }

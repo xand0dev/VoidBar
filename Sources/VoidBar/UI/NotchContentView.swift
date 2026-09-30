@@ -20,6 +20,14 @@ struct NotchContentView: View {
             .frame(width: size.width + 2 * topRadius, height: size.height)
             .shadow(color: .black.opacity(isOpen ? 0.55 : 0), radius: 22, y: 10)
 
+            // Light from below, in the colours of what is on screen.
+            if isOpen {
+                Aurora(colors: auroraColors, intensity: auroraIntensity)
+                    .frame(width: size.width + 2 * topRadius, height: size.height)
+                    .clipShape(NotchShape(topRadius: topRadius, bottomRadius: Theme.openBottomRadius))
+                    .transition(.opacity.animation(.easeOut(duration: 0.5)))
+            }
+
             // A hairline around the open panel, so it keeps its edge over a
             // dark wallpaper or a black window. The top meets the display and
             // stays unlined.
@@ -40,6 +48,12 @@ struct NotchContentView: View {
             .opacity(isOpen ? 1 : 0)
             .allowsHitTesting(false)
 
+            if isOpen {
+                EdgeSweep(shape: NotchShape(topRadius: topRadius, bottomRadius: Theme.openBottomRadius))
+                    .frame(width: size.width + 2 * topRadius, height: size.height)
+                    .mask(Rectangle().padding(.top, 3))
+            }
+
             VStack(spacing: 0) {
                 header
                 if isOpen {
@@ -59,6 +73,38 @@ struct NotchContentView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .animation(Theme.openAnimation, value: isOpen)
         .animation(Theme.paneAnimation, value: vm.tab)
+    }
+
+    // MARK: - Atmosphere
+
+    /// The aurora's palette: the cover's colours for music, the load colours
+    /// for the timer, sky and sun for the weather, the accent elsewhere.
+    private var auroraColors: [Color] {
+        switch vm.tab {
+        case .home, .media:
+            if let palette = vm.media.artworkPalette { return palette }
+            return [Theme.accentDeep, Theme.accent, Color(red: 0.36, green: 0.78, blue: 0.86)]
+        case .timer:
+            if vm.timer.state == .paused { return [Theme.warning, Color.orange, Theme.warning] }
+            return [Theme.accent, Theme.accentDeep, Color(red: 0.62, green: 0.45, blue: 1)]
+        case .weather:
+            return [Color(red: 0.35, green: 0.62, blue: 1), Color(red: 1, green: 0.78, blue: 0.4), Theme.accent]
+        case .monitor, .usage:
+            return [Theme.accent, Theme.positive, Theme.accentDeep]
+        case .calendar, .tasks:
+            return [Theme.accentDeep, Color(red: 0.62, green: 0.45, blue: 1), Theme.accent]
+        default:
+            return [Theme.accentDeep, Theme.accent, Color(red: 0.36, green: 0.78, blue: 0.86)]
+        }
+    }
+
+    /// Stronger where the panel is mostly imagery, softer behind text.
+    private var auroraIntensity: Double {
+        switch vm.tab {
+        case .home, .media, .timer, .weather: return 0.5
+        case .translate, .notes, .teleprompter, .snippets, .clipboard: return 0.28
+        default: return 0.38
+        }
     }
 
     // MARK: - Header
@@ -99,6 +145,10 @@ struct NotchContentView: View {
     @ViewBuilder
     private var trailing: some View {
         switch vm.tab {
+        case .home:
+            Text(Self.today.string(from: Date()).sentenceCased)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(Theme.tertiary)
         case .media:
             HStack(spacing: 6) {
                 if vm.media.track != nil {
@@ -143,6 +193,13 @@ struct NotchContentView: View {
         }
     }
 
+    private static let today: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: appLanguage)
+        formatter.setLocalizedDateFormatFromTemplate("EEEE d MMMM")
+        return formatter
+    }()
+
     @ViewBuilder
     private func counter(_ value: Int) -> some View {
         if value > 0 {
@@ -156,9 +213,9 @@ struct NotchContentView: View {
 
     private var content: some View {
         HStack(spacing: 12) {
-            Rail(vm: vm, tabs: vm.tabManager.leftRail)
+            Rail(vm: vm, tabs: vm.tabManager.leftRail, side: -1)
             panes
-            Rail(vm: vm, tabs: vm.tabManager.rightRail)
+            Rail(vm: vm, tabs: vm.tabManager.rightRail, side: 1)
         }
         .padding(.horizontal, 12)
         .padding(.top, 2)
@@ -188,6 +245,8 @@ struct NotchContentView: View {
     @ViewBuilder
     private var pane: some View {
         switch vm.tab {
+        case .home:
+            HomePane(vm: vm)
         case .media:
             MediaPane(media: vm.media)
         case .shelf:
@@ -245,8 +304,12 @@ private struct Rail: View {
     @ObservedObject var vm: NotchViewModel
     /// Which icons this rail carries — there are two rails now, one per side.
     let tabs: [NotchViewModel.Tab]
+    /// -1 for the left rail, 1 for the right: which way the icons arrive from.
+    let side: CGFloat
 
     @State private var hovered: NotchViewModel.Tab?
+    /// The active highlight is one view that moves between icons.
+    @Namespace private var indicator
 
     /// Long enough to swallow a pass-through, short enough that a deliberate
     /// hover still feels like it answered instantly.
@@ -254,7 +317,7 @@ private struct Rail: View {
 
     var body: some View {
         VStack(spacing: 1) {
-            ForEach(tabs) { tab in
+            ForEach(Array(tabs.enumerated()), id: \.element) { index, tab in
                 Button {
                     vm.select(tab)
                     HapticManager.play(.alignment)
@@ -262,14 +325,27 @@ private struct Rail: View {
                     Image(systemName: tab.symbol)
                         .font(.system(size: 12, weight: vm.tab == tab ? .semibold : .medium))
                         .frame(width: 30, height: 22)
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
-                                .fill(fill(for: tab))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
-                                .strokeBorder(Color.white.opacity(vm.tab == tab ? 0.12 : 0), lineWidth: 0.75)
-                        )
+                        .background {
+                            if vm.tab == tab {
+                                RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.white.opacity(0.22), Color.white.opacity(0.12)],
+                                            startPoint: .top,
+                                            endPoint: .bottom
+                                        )
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                                            .strokeBorder(Color.white.opacity(0.16), lineWidth: 0.75)
+                                    )
+                                    .shadow(color: Theme.accent.opacity(0.35), radius: 6)
+                                    .matchedGeometryEffect(id: "active", in: indicator)
+                            } else if hovered == tab {
+                                RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                                    .fill(Theme.surface)
+                            }
+                        }
                         .foregroundStyle(vm.tab == tab ? Color.white : Color.white.opacity(hovered == tab ? 0.8 : 0.4))
                         .contentShape(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
                         // A render-time transform. Growing the frame instead
@@ -280,6 +356,7 @@ private struct Rail: View {
                 }
                 .buttonStyle(.plain)
                 .help(tab.title)
+                .reveal(delay: 0.06 + Double(index) * 0.035, dx: side * 12, dy: 0)
                 .onHover { inside in
                     if inside {
                         hovered = tab
@@ -292,6 +369,7 @@ private struct Rail: View {
         .frame(width: 30)
         .frame(maxHeight: .infinity, alignment: .center)
         .animation(Theme.contentAnimation, value: hovered)
+        .animation(.spring(response: 0.34, dampingFraction: 0.78), value: vm.tab)
         // Moving to another icon cancels the pending switch along with the
         // task, so only the icon actually rested on ever wins.
         .task(id: hovered) {
@@ -303,8 +381,4 @@ private struct Rail: View {
         }
     }
 
-    private func fill(for tab: NotchViewModel.Tab) -> Color {
-        if vm.tab == tab { return Theme.surfaceActive }
-        return hovered == tab ? Theme.surface : .clear
-    }
 }
