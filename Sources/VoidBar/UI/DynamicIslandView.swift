@@ -38,9 +38,9 @@ struct DynamicIslandView: View {
             pillBody {
                 Image(systemName: "timer")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(Theme.tertiary)
+                    .foregroundColor(Theme.accent)
                 Text(vm.timer.formattedTime)
-                    .font(.system(size: 11, weight: .medium).monospacedDigit())
+                    .font(Theme.numeral(11.5))
                     .foregroundColor(.white)
                     .lineLimit(1)
                     .fixedSize()
@@ -80,10 +80,14 @@ struct DynamicIslandView: View {
         HStack(spacing: 6) {
             content()
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 11)
         .frame(height: notchHeight)
         .background(Color.black)
         .clipShape(RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: notchHeight / 2, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.75)
+        )
     }
 
     // MARK: - Pill Priority

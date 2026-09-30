@@ -18,7 +18,27 @@ struct NotchContentView: View {
             .fill(Color.black)
             .opacity(!isOpen && !vm.geometry.isPhysical ? 0 : 1)
             .frame(width: size.width + 2 * topRadius, height: size.height)
-            .shadow(color: .black.opacity(isOpen ? 0.5 : 0), radius: 18, y: 8)
+            .shadow(color: .black.opacity(isOpen ? 0.55 : 0), radius: 22, y: 10)
+
+            // A hairline around the open panel, so it keeps its edge over a
+            // dark wallpaper or a black window. The top meets the display and
+            // stays unlined.
+            NotchShape(
+                topRadius: topRadius,
+                bottomRadius: isOpen ? Theme.openBottomRadius : Theme.collapsedBottomRadius
+            )
+            .stroke(
+                LinearGradient(
+                    colors: [Color.white.opacity(0.03), Color.white.opacity(0.13)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                ),
+                lineWidth: 1
+            )
+            .frame(width: size.width + 2 * topRadius, height: size.height)
+            .mask(Rectangle().padding(.top, 3))
+            .opacity(isOpen ? 1 : 0)
+            .allowsHitTesting(false)
 
             VStack(spacing: 0) {
                 header
@@ -52,20 +72,24 @@ struct NotchContentView: View {
     private var header: some View {
         HStack(spacing: 0) {
             if isOpen {
-                Text(vm.tab.title.uppercased())
-                    .font(.system(size: 9, weight: .semibold))
-                    .tracking(0.8)
-                    .foregroundStyle(Theme.tertiary)
-                    .padding(.leading, 16)
-                    .id(vm.tab)
-                    .transition(.opacity)
+                HStack(spacing: 6) {
+                    Image(systemName: vm.tab.symbol)
+                        .font(.system(size: 9, weight: .bold))
+                    Text(vm.tab.title.uppercased())
+                        .font(Theme.micro)
+                        .tracking(1)
+                }
+                .foregroundStyle(Theme.tertiary)
+                .padding(.leading, 20)
+                .id(vm.tab)
+                .transition(.opacity)
             }
             Spacer(minLength: 0)
             Color.clear.frame(width: vm.geometry.notchSize.width, height: 1)
             Spacer(minLength: 0)
             if isOpen {
                 trailing
-                    .padding(.trailing, 16)
+                    .padding(.trailing, 20)
                     .transition(.opacity)
             }
         }
@@ -91,17 +115,11 @@ struct NotchContentView: View {
         case .snippets:
             counter(vm.snippets.items.count)
         case .calendar:
-            if let next = vm.calendar.next {
-                Text(CalendarPane.countdown(to: next, from: vm.calendar.now))
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundStyle(next.isRunning ? Color.white.opacity(0.8) : Theme.tertiary)
-            }
+            // The pane leads with the countdown itself.
+            EmptyView()
         case .timer:
-            if vm.timer.state != .idle {
-                Text(vm.timer.formattedTime)
-                    .font(.system(size: 10, weight: .medium).monospacedDigit())
-                    .foregroundStyle(vm.timer.state == .running ? Color.white.opacity(0.8) : Theme.tertiary)
-            }
+            // The ring already shows the time, large.
+            EmptyView()
         case .translate:
             // Nothing: the columns name both languages already, and the strip
             // is the one part of the panel worth not spending on a repeat.
@@ -137,12 +155,13 @@ struct NotchContentView: View {
     // MARK: - Body
 
     private var content: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 12) {
             Rail(vm: vm, tabs: vm.tabManager.leftRail)
             panes
             Rail(vm: vm, tabs: vm.tabManager.rightRail)
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 12)
+        .padding(.top, 2)
         .padding(.bottom, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -234,28 +253,33 @@ private struct Rail: View {
     private let dwell = Duration.milliseconds(150)
 
     var body: some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 1) {
             ForEach(tabs) { tab in
                 Button {
                     vm.select(tab)
                     HapticManager.play(.alignment)
                 } label: {
                     Image(systemName: tab.symbol)
-                        .font(.system(size: 11, weight: .medium))
-                        .frame(width: 28, height: 20)
+                        .font(.system(size: 12, weight: vm.tab == tab ? .semibold : .medium))
+                        .frame(width: 30, height: 22)
                         .background(
-                            RoundedRectangle(cornerRadius: 7, style: .continuous)
+                            RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
                                 .fill(fill(for: tab))
                         )
-                        .foregroundStyle(vm.tab == tab ? Color.white : Theme.tertiary)
-                        .contentShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                                .strokeBorder(Color.white.opacity(vm.tab == tab ? 0.12 : 0), lineWidth: 0.75)
+                        )
+                        .foregroundStyle(vm.tab == tab ? Color.white : Color.white.opacity(hovered == tab ? 0.8 : 0.4))
+                        .contentShape(RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous))
                         // A render-time transform. Growing the frame instead
                         // would re-lay out the rail on every hover, and layout
                         // that runs on pointer movement is exactly the kind
                         // that shows up as a stutter.
-                        .scaleEffect(hovered == tab ? 1.15 : 1)
+                        .scaleEffect(hovered == tab && vm.tab != tab ? 1.06 : 1)
                 }
                 .buttonStyle(.plain)
+                .help(tab.title)
                 .onHover { inside in
                     if inside {
                         hovered = tab
@@ -265,7 +289,7 @@ private struct Rail: View {
                 }
             }
         }
-        .frame(width: 28)
+        .frame(width: 30)
         .frame(maxHeight: .infinity, alignment: .center)
         .animation(Theme.contentAnimation, value: hovered)
         // Moving to another icon cancels the pending switch along with the
@@ -280,7 +304,7 @@ private struct Rail: View {
     }
 
     private func fill(for tab: NotchViewModel.Tab) -> Color {
-        if vm.tab == tab { return Theme.surfaceHover }
+        if vm.tab == tab { return Theme.surfaceActive }
         return hovered == tab ? Theme.surface : .clear
     }
 }
