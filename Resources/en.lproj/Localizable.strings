@@ -150,3 +150,12 @@
 "Open Weather to turn it on" = "Open Weather to turn it on";
 "5-hour limits" = "5-hour limits";
 "Last copied" = "Last copied";
+
+/* Overview widgets */
+"AI limits" = "AI limits";
+"Latest note" = "Latest note";
+"Next meeting" = "Next meeting";
+"Nothing to show yet" = "Nothing to show yet";
+"Widgets appear for the tabs you use once they have something to show." = "Widgets appear for the tabs you use once they have something to show.";
+"Its tab is off" = "Its tab is off";
+"Drag to set the order. A widget shows only while its tab is on and it has something to show; Now playing takes the large card." = "Drag to set the order. A widget shows only while its tab is on and it has something to show; Now playing takes the large card.";
