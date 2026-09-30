@@ -14,7 +14,13 @@ struct UsagePane: View {
                 loaded: usage.loaded,
                 empty: .claudeSetup,
                 now: usage.checkedAt,
-                staleHint: localized("Updates when you use Claude Code in the terminal (claude CLI).")
+                staleHint: usage.claude?.origin == .account
+                    ? localized("Press ↻ to refresh from your Claude account.")
+                    : localized("Status line numbers can be hours old. Press ↻ to read them from your Claude account."),
+                refreshing: usage.claudeRefreshing,
+                error: usage.claudeError,
+                refreshHelp: localized("Refresh from your Claude account"),
+                refresh: { Task { await usage.refreshClaudeFromAccount() } }
             )
             AgentCard(
                 name: "Codex",
@@ -23,7 +29,11 @@ struct UsagePane: View {
                 loaded: usage.loaded,
                 empty: .codexMissing,
                 now: usage.checkedAt,
-                staleHint: localized("Updates after your next Codex response.")
+                staleHint: localized("Updates after your next Codex response."),
+                refreshing: false,
+                error: nil,
+                refreshHelp: localized("Read Codex's logs again"),
+                refresh: { Task { await usage.refresh() } }
             )
         }
         .padding(.top, 2)
@@ -52,6 +62,10 @@ private struct AgentCard: View {
     /// Said when the numbers are over an hour old: they only move when the
     /// tool itself reports, which is easy to forget.
     let staleHint: String
+    let refreshing: Bool
+    let error: String?
+    let refreshHelp: String
+    let refresh: () -> Void
 
     @State private var copied = false
 
@@ -78,6 +92,17 @@ private struct AgentCard: View {
                         .foregroundStyle(Theme.tertiary)
                         .lineLimit(1)
                 }
+                Button(action: refresh) {
+                    Image(systemName: "arrow.clockwise")
+                        .rotationEffect(.degrees(refreshing ? 360 : 0))
+                        .animation(
+                            refreshing ? .linear(duration: 0.9).repeatForever(autoreverses: false) : .default,
+                            value: refreshing
+                        )
+                }
+                .buttonStyle(NotchButtonStyle(size: 22))
+                .disabled(refreshing)
+                .help(refreshHelp)
             }
 
             if let usage {
@@ -87,7 +112,13 @@ private struct AgentCard: View {
                 if let weekly = usage.weekly {
                     WindowRow(title: localized("Week"), window: weekly, now: now)
                 }
-                if now.timeIntervalSince(usage.recordedAt) > 3600 {
+                if let error {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(Theme.warning)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if now.timeIntervalSince(usage.recordedAt) > 3600 {
                     Label(staleHint, systemImage: "clock.arrow.circlepath")
                         .font(.system(size: 9.5))
                         .foregroundStyle(Theme.tertiary)
@@ -96,6 +127,12 @@ private struct AgentCard: View {
                 }
             } else if loaded {
                 emptyState
+                if let error {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(Theme.warning)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             } else {
                 Spacer(minLength: 0)
             }
@@ -110,7 +147,7 @@ private struct AgentCard: View {
         switch empty {
         case .claudeSetup:
             VStack(alignment: .leading, spacing: 7) {
-                Text(localized("Add VoidBar as the Claude Code status line to see Pro and Max limits here."))
+                Text(localized("Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line."))
                     .font(.system(size: 10.5))
                     .foregroundStyle(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)

@@ -10,6 +10,7 @@ VoidBar is local-first and has no analytics, advertising, user accounts, or proj
 | Weather forecast | `https://api.open-meteo.com/` | Approximate latitude and longitude returned by the location service. | After a successful weather-location request. |
 | TickTick | The iCal URL entered in settings | A normal HTTPS request to that URL; the URL itself may contain a private subscription token. | After configuration and every 15 minutes while VoidBar runs. |
 | Spotify artwork | `i.scdn.co`, `mosaic.scdn.co`, or `lineup-images.scdn.co` | A normal HTTPS image request. Cookies and URL caching are disabled. | When compatible Spotify artwork is available. |
+| Claude plan limits | `https://api.anthropic.com/api/oauth/usage` | Claude Code's own sign-in token, read from the login Keychain after macOS asks you, as a normal HTTPS request with no cookies or cache. The answer holds only usage percentages and reset times. | Only when you press ↻ on the Claude Code card in the Usage tab. Never in the background. VoidBar never refreshes or changes Claude Code's sign-in. |
 | Translation assets | Apple-managed services | Managed by macOS, not by VoidBar. | macOS may download a language pack when needed. |
 
 VoidBar does not send notes, snippets, clipboard contents, file-shelf paths, calendar events, translations, system statistics, or telemetry to a VoidBar server. There is no VoidBar server.
@@ -26,6 +27,7 @@ VoidBar does not send notes, snippets, clipboard contents, file-shelf paths, cal
 | Teleprompter text | macOS preferences | Kept across launches. |
 | Pomodoro totals, tab layout, and settings | macOS preferences | Kept across launches. |
 | TickTick subscription URL | macOS preferences | Kept until removed from settings. Treat this URL as a secret because it may contain an access token. |
+| Claude plan limits from the account | `~/Library/Application Support/VoidBar/claude-account-usage.json` | Written only after you refresh from the account. The same two windows and times, and the plan name. Owner-only permissions. |
 | Claude Code plan limits | `~/Library/Application Support/VoidBar/claude-code-usage.json` | Written only if you set VoidBar as the Claude Code status line command. Holds the five-hour and seven-day usage percentages, their reset times, and when they were recorded — no prompts, paths, or session details. Owner-only permissions. Replaced on each update. |
 
 The Usage tab also **reads** Codex session logs in `~/.codex/sessions` (only the last eight days of folders, and only the rate-limit events near the end of the newest logs). VoidBar never modifies, copies, or uploads them. Neither source involves a network request.

@@ -33,6 +33,16 @@ struct AgentUsage: Equatable, Codable {
     var plan: String?
     /// When the tool recorded these numbers, not when VoidBar read them.
     var recordedAt: Date
+    /// Where Claude's numbers came from; nil for Codex.
+    var origin: Origin? = nil
+
+    enum Origin: String, Codable {
+        /// The status line of one terminal session — as fresh as that
+        /// session's last response.
+        case statusLine
+        /// The account itself, on the user's refresh.
+        case account
+    }
 }
 
 // MARK: - Parsing
@@ -117,15 +127,33 @@ enum AgentUsageFiles {
             .appendingPathComponent(".codex/sessions", isDirectory: true)
     }
 
-    static func readClaude() -> AgentUsage? {
-        guard let data = try? Data(contentsOf: claudeSnapshot) else { return nil }
+    /// Where the last account refresh is kept, so it survives a relaunch.
+    static var claudeAccountSnapshot: URL {
+        claudeSnapshot.deletingLastPathComponent().appendingPathComponent("claude-account-usage.json")
+    }
+
+    /// The account's numbers once the user has refreshed from it — they are
+    /// the source of truth even when older than a status line report, which
+    /// can repeat numbers from hours ago with a fresh timestamp. The status
+    /// line snapshot is the fallback.
+    static func readClaude(account: URL = claudeAccountSnapshot, statusLine: URL = claudeSnapshot) -> AgentUsage? {
+        if var usage = read(account) {
+            usage.origin = .account
+            return usage
+        }
+        guard var usage = read(statusLine) else { return nil }
+        usage.origin = .statusLine
+        return usage
+    }
+
+    private static func read(_ url: URL) -> AgentUsage? {
+        guard let data = try? Data(contentsOf: url) else { return nil }
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
         return try? decoder.decode(AgentUsage.self, from: data)
     }
 
-    static func writeClaude(_ usage: AgentUsage) throws {
-        let url = claudeSnapshot
+    static func writeClaude(_ usage: AgentUsage, to url: URL = claudeSnapshot) throws {
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(), withIntermediateDirectories: true
         )
@@ -198,6 +226,10 @@ final class AgentUsageStore: ObservableObject {
     /// numbers did not change, so "updated … ago", reset countdowns, and a
     /// window that has just reset stay current on screen.
     @Published private(set) var checkedAt = Date()
+    /// A refresh from the Claude account is in flight.
+    @Published private(set) var claudeRefreshing = false
+    /// Why the last refresh from the account failed, in words for the card.
+    @Published private(set) var claudeError: String?
 
     private var refreshing = false
     #if DEBUG
@@ -219,6 +251,32 @@ final class AgentUsageStore: ObservableObject {
         if claude != self.claude { self.claude = claude }
         if codex != self.codex { self.codex = codex }
         loaded = true
+        checkedAt = Date()
+    }
+
+    /// Asks the Claude account for its limits — only ever from the refresh
+    /// button. The first time, macOS asks whether VoidBar may read Claude
+    /// Code's sign-in from the Keychain.
+    func refreshClaudeFromAccount() async {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
+        guard !claudeRefreshing else { return }
+        claudeRefreshing = true
+        defer { claudeRefreshing = false }
+        let result: Result<AgentUsage, Error> = await Task.detached(priority: .userInitiated) {
+            do { return .success(try await ClaudeAccountUsage.fetch()) } catch { return .failure(error) }
+        }.value
+        switch result {
+        case .success(let usage):
+            try? AgentUsageFiles.writeClaude(usage, to: AgentUsageFiles.claudeAccountSnapshot)
+            var shown = usage
+            shown.origin = .account
+            claude = shown
+            claudeError = nil
+        case .failure(let error):
+            claudeError = error.localizedDescription
+        }
         checkedAt = Date()
     }
 
