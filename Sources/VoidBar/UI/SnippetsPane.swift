@@ -37,10 +37,10 @@ struct SnippetsPane: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(Theme.tertiary)
-            TextField("", text: $snippets.query)
+            TextField(localized("Search snippets"), text: $snippets.query)
                 .textFieldStyle(.plain)
-                .font(.system(size: 11))
-                .foregroundStyle(.white)
+                .font(Theme.body)
+                .foregroundStyle(Theme.primary)
                 .tint(Theme.secondary)
                 .focused($focused, equals: .search)
                 .onKeyPress(.escape) {
@@ -57,17 +57,20 @@ struct SnippetsPane: View {
             }
             Button { beginAdding() } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Theme.secondary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(NotchButtonStyle(size: 22))
             .help(localized("Add a snippet"))
         }
-        .padding(.horizontal, 9)
-        .frame(height: 24)
+        .padding(.leading, 10)
+        .padding(.trailing, 3)
+        .frame(height: 28)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(Theme.surface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .strokeBorder(Color.white.opacity(focused == .search ? 0.22 : 0.08), lineWidth: 0.75)
         )
         .contentShape(Rectangle())
         .onTapGesture { focused = .search }
@@ -118,7 +121,7 @@ struct SnippetsPane: View {
             Button { commit() } label: {
                 Image(systemName: "checkmark")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(draftText.isEmpty ? Theme.tertiary : Color.green)
+                    .foregroundStyle(draftText.isEmpty ? Theme.tertiary : Theme.positive)
             }
             .buttonStyle(.plain)
             .disabled(draftText.isEmpty)
@@ -185,17 +188,10 @@ struct SnippetsPane: View {
     @ViewBuilder
     private var list: some View {
         if snippets.filtered.isEmpty {
-            VStack(spacing: 6) {
-                Image(systemName: snippets.items.isEmpty ? "pin" : "magnifyingglass")
-                    .font(.system(size: 18, weight: .light))
-                    .foregroundStyle(Theme.tertiary)
-                if snippets.items.isEmpty, !isAdding {
-                    Text("Nothing here yet — add with +")
-                        .font(.system(size: 10))
-                        .foregroundStyle(Theme.tertiary)
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            EmptyState(
+                symbol: snippets.items.isEmpty ? "pin" : "magnifyingglass",
+                title: snippets.items.isEmpty && !isAdding ? localized("Nothing here yet — add with +") : localized("No matches")
+            )
         } else {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 3) {
@@ -203,8 +199,9 @@ struct SnippetsPane: View {
                         SnippetRow(item: item, snippets: snippets)
                     }
                 }
-                .padding(.bottom, 2)
+                .padding(.bottom, 12)
             }
+            .fadingBottomEdge()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
@@ -218,20 +215,17 @@ private struct SnippetRow: View {
 
     var body: some View {
         HStack(spacing: 9) {
-            Image(systemName: justCopied ? "checkmark" : item.symbol)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(justCopied ? Color.green : Theme.tertiary)
-                .frame(width: 14)
+            IconChip(symbol: justCopied ? "checkmark" : item.symbol, tint: justCopied ? Theme.positive : .white, size: 20)
             if !item.label.isEmpty {
                 Text(item.label)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.white)
+                    .font(Theme.bodyEmphasis)
+                    .foregroundStyle(Theme.primary)
                     .lineLimit(1)
                     .layoutPriority(1)
             }
             Text(item.text.replacingOccurrences(of: "\n", with: " "))
-                .font(.system(size: 11))
-                .foregroundStyle(item.label.isEmpty ? .white : Theme.secondary)
+                .font(Theme.body)
+                .foregroundStyle(item.label.isEmpty ? Theme.primary : Theme.secondary)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer(minLength: 6)
@@ -247,10 +241,11 @@ private struct SnippetRow: View {
                 .help(localized("Delete"))
             }
         }
-        .padding(.horizontal, 9)
-        .frame(height: 26)
+        .padding(.leading, 5)
+        .padding(.trailing, 10)
+        .frame(height: 28)
         .background(
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
                 .fill(hovering ? Theme.surfaceHover : Theme.surface)
         )
         .contentShape(Rectangle())

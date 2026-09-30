@@ -9,70 +9,87 @@ struct TeleprompterPane: View {
     @State private var timer: Timer?
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Text(localized("Teleprompter"))
-                    .font(.headline)
-                    .foregroundColor(Theme.secondary)
-                
-                Spacer()
-                
-                // Controls
-                Slider(value: $store.speed, in: 0.2...3.0, step: 0.1)
-                    .frame(width: 80)
-                    .tint(Color.white)
-                
-                Button {
-                    togglePlay()
-                } label: {
-                    Image(systemName: store.isPlaying ? "pause.fill" : "play.fill")
-                        .foregroundColor(store.isPlaying ? Color.white : Theme.secondary)
-                        .padding(6)
-                        .background(Theme.surface)
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-            .padding(.bottom, 8)
-            
-            // Content
+        VStack(spacing: 8) {
             ZStack(alignment: .top) {
                 if store.isPlaying {
-                    // Playing mode: Auto-scrolling text
+                    // Playing mode: auto-scrolling text, starting mid-card.
                     GeometryReader { geo in
                         ScrollView(.vertical, showsIndicators: false) {
                             Text(store.text)
-                                .font(.system(size: 24, weight: .medium, design: .default))
-                                .foregroundColor(Color.white)
+                                .font(.system(size: 24, weight: .semibold))
+                                .foregroundStyle(Theme.primary)
                                 .multilineTextAlignment(.center)
-                                .padding(.horizontal, 24)
-                                .padding(.vertical, geo.size.height / 2) // Start from middle
+                                .lineSpacing(4)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, geo.size.height / 2)
                                 .offset(y: -offset)
                                 .frame(maxWidth: .infinity)
                         }
-                        .disabled(true) // Disable manual scroll while playing
+                        .disabled(true) // No manual scrolling while playing.
                     }
+                    // The reading line: text is sharpest at the middle.
+                    .mask(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: .black, location: 0.3),
+                                .init(color: .black, location: 0.7),
+                                .init(color: .clear, location: 1),
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                 } else {
-                    // Edit mode: Standard TextEditor
                     TextEditor(text: $store.text)
-                        .font(.system(size: 16))
-                        .foregroundColor(Color.white)
+                        .font(.system(size: 15))
+                        .foregroundStyle(Theme.primary)
+                        .lineSpacing(3)
                         .scrollContentBackground(.hidden)
+                        .scrollIndicators(.hidden)
+                        .tint(Theme.accent)
                         .background(Color.clear)
-                        .padding(.horizontal, 12)
                         .focused($isFocused)
                 }
             }
-            .frame(maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .card(padding: 8)
+
+            controls
         }
+        .padding(.top, 2)
         .onDisappear {
             stopTimer()
         }
     }
     
+    private var controls: some View {
+        HStack(spacing: 8) {
+            SectionLabel(text: localized("Speed"))
+            Image(systemName: "tortoise.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(Theme.tertiary)
+            Slider(value: $store.speed, in: 0.2...3.0)
+                .controlSize(.mini)
+                .tint(Theme.accent)
+                .frame(width: 130)
+            Image(systemName: "hare.fill")
+                .font(.system(size: 10))
+                .foregroundStyle(Theme.tertiary)
+            Spacer()
+            Button {
+                togglePlay()
+            } label: {
+                Label(
+                    store.isPlaying ? localized("Pause") : localized("Play"),
+                    systemImage: store.isPlaying ? "pause.fill" : "play.fill"
+                )
+            }
+            .buttonStyle(PillButtonStyle(prominent: !store.isPlaying))
+        }
+        .frame(height: 24)
+    }
+
     private func togglePlay() {
         store.isPlaying.toggle()
         if store.isPlaying {

@@ -2,98 +2,109 @@ import SwiftUI
 
 struct TasksPane: View {
     @ObservedObject var store: TickTickStore
-    
+
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            
+        Group {
             if store.isLoading && store.tasks.isEmpty {
-                Spacer()
                 ProgressView()
-                Spacer()
+                    .controlSize(.small)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let error = store.errorMessage {
-                Spacer()
-                Text(error)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(Theme.tertiary)
-                    .multilineTextAlignment(.center)
-                    .padding()
-                Spacer()
+                EmptyState(symbol: "checklist", title: localized("TickTick is not connected"), message: error)
             } else if store.tasks.isEmpty {
-                Spacer()
-                VStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(Theme.tertiary)
-                    Text("All done for today!")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(Theme.tertiary)
-                }
-                Spacer()
+                EmptyState(symbol: "checkmark.circle", title: localized("All done for today!"))
             } else {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 10) {
-                        ForEach(store.tasks) { task in
-                            taskRow(task)
+                VStack(spacing: 6) {
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 3) {
+                            ForEach(store.tasks) { task in
+                                TaskRow(task: task)
+                            }
                         }
+                        .padding(.vertical, 2)
+                        .padding(.bottom, 8)
                     }
-                    .padding(14)
+                    .fadingBottomEdge(12)
+                    footer
                 }
             }
         }
+        .padding(.top, 2)
     }
-    
-    private var header: some View {
-        HStack {
-            Text("TickTick")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(Theme.secondary)
+
+    private var footer: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "checklist")
+                .font(.system(size: 9, weight: .semibold))
+            Text(verbatim: "TickTick")
+                .font(Theme.caption)
             Spacer()
             Button {
-                Task {
-                    await store.fetchTasks()
-                }
+                Task { await store.fetchTasks() }
             } label: {
-                Image(systemName: "arrow.clockwise")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(Theme.tertiary)
+                Label(localized("Refresh"), systemImage: "arrow.clockwise")
             }
-            .buttonStyle(.plain)
+            .buttonStyle(PillButtonStyle())
         }
-        .padding(.horizontal, 14)
-        .padding(.top, 14)
-        .padding(.bottom, 6)
+        .foregroundStyle(Theme.tertiary)
     }
-    
-    private func taskRow(_ task: TickTickTask) -> some View {
-        HStack(alignment: .top, spacing: 10) {
+}
+
+private struct TaskRow: View {
+    let task: TickTickTask
+    @State private var hovering = false
+
+    var body: some View {
+        HStack(spacing: 10) {
             Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 14))
-                .foregroundColor(task.isCompleted ? Theme.secondary : Theme.tertiary)
-                .padding(.top, 2)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(task.title)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(task.isCompleted ? Theme.tertiary : .white)
-                    .strikethrough(task.isCompleted)
-                
-                if let date = task.dueDate {
-                    Text(date, style: .date)
-                        .font(.system(size: 11))
-                        .foregroundColor(priorityColor(task.priority))
-                }
+                .font(.system(size: 15, weight: .regular))
+                .foregroundStyle(task.isCompleted ? Theme.tertiary : tint)
+            Text(task.title)
+                .font(Theme.bodyEmphasis)
+                .foregroundStyle(task.isCompleted ? Theme.tertiary : Theme.primary)
+                .strikethrough(task.isCompleted, color: Theme.tertiary)
+                .lineLimit(1)
+            Spacer(minLength: 6)
+            if let date = task.dueDate, !task.isCompleted {
+                Text(Self.due(date))
+                    .font(Theme.captionEmphasis)
+                    .foregroundStyle(isOverdueOrToday(date) ? tint : Theme.secondary)
+                    .padding(.horizontal, 7)
+                    .frame(height: 18)
+                    .background(Capsule().fill(Theme.surface))
             }
-            Spacer()
+        }
+        .padding(.horizontal, 10)
+        .frame(height: 30)
+        .background(
+            RoundedRectangle(cornerRadius: 9, style: .continuous)
+                .fill(hovering ? Theme.surfaceHover : Theme.surface)
+        )
+        .onHover { hovering = $0 }
+        .animation(Theme.contentAnimation, value: hovering)
+    }
+
+    /// TickTick's four priorities: high, medium, low, none.
+    private var tint: Color {
+        switch task.priority {
+        case 5: return Theme.critical
+        case 3: return Theme.warning
+        case 1: return Theme.accent
+        default: return Theme.secondary
         }
     }
-    
-    private func priorityColor(_ priority: Int) -> Color {
-        switch priority {
-        case 5: return .red
-        case 3: return .orange
-        case 1: return .blue
-        default: return Theme.tertiary
-        }
+
+    private func isOverdueOrToday(_ date: Date) -> Bool {
+        Calendar.current.isDateInToday(date) || date < Date()
+    }
+
+    private static func due(_ date: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) { return localized("Today") }
+        if calendar.isDateInTomorrow(date) { return localized("tomorrow").sentenceCased }
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: appLanguage)
+        formatter.setLocalizedDateFormatFromTemplate("d MMM")
+        return formatter.string(from: date)
     }
 }

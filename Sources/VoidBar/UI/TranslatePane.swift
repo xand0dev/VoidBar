@@ -55,7 +55,7 @@ struct TranslatePane: View {
     // MARK: - Left
 
     private func source(_ font: CGFloat) -> some View {
-        column(Translator.name(translator.route.source)) {
+        column(Translator.name(translator.route.source), dot: Theme.secondary) {
             if !translator.input.isEmpty {
                 Button { translator.reset() } label: {
                     Image(systemName: "xmark")
@@ -92,17 +92,13 @@ struct TranslatePane: View {
                     return .handled
                 }
         }
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Theme.surface)
-        )
+        .card(padding: 12)
     }
 
     // MARK: - Right
 
     private func result(_ font: CGFloat) -> some View {
-        column(Translator.name(translator.route.target)) {
+        column(Translator.name(translator.route.target), dot: Theme.accent) {
             if !translator.output.isEmpty {
                 Button {
                     translator.copyOutput()
@@ -111,14 +107,18 @@ struct TranslatePane: View {
                 } label: {
                     Image(systemName: copied ? "checkmark" : "doc.on.doc")
                         .font(.system(size: 10, weight: .semibold))
-                        .foregroundStyle(copied ? Color.green : Theme.secondary)
+                        .foregroundStyle(copied ? Theme.positive : Theme.secondary)
                 }
                 .buttonStyle(.plain)
             }
         } content: {
             outcome(font)
         }
-        .padding(10)
+        .padding(12)
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
+                .strokeBorder(Color.white.opacity(0.08), lineWidth: 0.75)
+        )
         .animation(Theme.contentAnimation, value: copied)
     }
 
@@ -171,7 +171,7 @@ struct TranslatePane: View {
     /// minus the gap, minus the padding, minus the title row above it.
     private func textArea(in size: CGSize) -> CGSize {
         CGSize(
-            width: max(40, (size.width - 10) / 2 - 20),
+            width: max(40, (size.width - 10) / 2 - 24),
             height: max(40, size.height - 40)
         )
     }
@@ -196,15 +196,17 @@ struct TranslatePane: View {
 
     private func column<Accessory: View, Content: View>(
         _ title: String,
+        dot: Color,
         @ViewBuilder accessory: () -> Accessory,
         @ViewBuilder content: () -> Content
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
+                Circle().fill(dot).frame(width: 5, height: 5)
                 Text(title.uppercased())
-                    .font(.system(size: 9, weight: .semibold))
-                    .tracking(0.8)
-                    .foregroundStyle(Theme.tertiary)
+                    .font(Theme.micro)
+                    .tracking(0.9)
+                    .foregroundStyle(Theme.secondary)
                 Spacer(minLength: 4)
                 accessory()
             }
