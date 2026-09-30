@@ -80,8 +80,20 @@ Release images are built from the tagged source by [GitHub Actions](.github/work
 - **Weather** — current conditions and 24 hours ahead through Open-Meteo.
 - **TickTick** — tasks from your private TickTick iCal subscription.
 - **System monitor** — CPU, memory, upload, and download activity at a glance.
+- **Usage** — how much of the five-hour and weekly plan limits of Claude Code and Codex is left, and when each resets. Off by default; turn it on in Preferences. See [Coding agent limits](#coding-agent-limits).
 
 ![VoidBar media controller playing a demo track with original cover art](docs/assets/media.png)
+
+## Coding agent limits
+
+![VoidBar Usage tab with Claude Code and Codex plan limits (demo numbers)](docs/assets/usage.png)
+
+The Usage tab reads numbers the tools already produce, on this Mac, without any network request or sign-in:
+
+- **Codex** writes its current limits into its own session logs after each response. VoidBar reads the newest one from `~/.codex/sessions`; nothing to set up.
+- **Claude Code** reports Pro and Max limits only to its [status line](https://code.claude.com/docs/en/statusline) command. In the Usage tab, choose **Copy setup** and paste the `statusLine` entry into `~/.claude/settings.json`. VoidBar then acts as that command: it prints a short line such as `Opus · 5h 24% · 7d 41%` for Claude Code, and keeps only the two limit windows in `~/Library/Application Support/VoidBar/claude-code-usage.json`. Claude Code runs status line commands in its terminal interface, so sessions started with the `claude` CLI keep the card current. If you already use a custom status line, keep yours; the Claude Code card simply stays empty.
+
+Numbers update when either tool gets a response. A window whose reset time has passed shows as reset until the next response brings fresh numbers.
 
 ## Designed like a Mac app
 
