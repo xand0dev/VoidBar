@@ -200,10 +200,16 @@ private struct WindowRow: View {
                     .foregroundStyle(Theme.primary)
             }
             CapsuleProgress(fraction: fraction, tint: UsageFormat.tint(for: current.usedPercent), height: 5)
-            Text(UsageFormat.reset(window, now: now))
-                .font(.system(size: 9, weight: .medium).monospacedDigit())
-                .foregroundStyle(Theme.tertiary)
-                .lineLimit(1)
+            HStack(spacing: 6) {
+                Text(UsageFormat.reset(window, now: now))
+                Spacer(minLength: 4)
+                // ChatGPT and Codex speak in what is left; saying both makes
+                // the numbers easy to check against them.
+                Text(localized("%d%% left", Int((100 - current.usedPercent).rounded())))
+            }
+            .font(.system(size: 9, weight: .medium).monospacedDigit())
+            .foregroundStyle(Theme.tertiary)
+            .lineLimit(1)
         }
     }
 }

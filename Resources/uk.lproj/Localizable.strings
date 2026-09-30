@@ -190,3 +190,4 @@
 "Refresh from your Claude account" = "Оновити з акаунта Claude";
 "Read Codex's logs again" = "Перечитати журнали Codex";
 "Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line." = "Натисніть ↻, щоб узяти ліміти Pro і Max з акаунта Claude, або додайте VoidBar як status line у Claude Code.";
+"%d%% left" = "залишилось %d%%";
