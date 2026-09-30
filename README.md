@@ -26,7 +26,7 @@
   <a href="README.uk.md">Українська</a>
 </p>
 
-![VoidBar walkthrough: music controls, a focus timer, English-to-Ukrainian translation, and clipboard history](docs/assets/walkthrough.gif)
+![VoidBar walkthrough: the notch grows into a live island, opens onto the Overview, then a focus timer, English-to-Ukrainian translation, and clipboard history](docs/assets/walkthrough.gif)
 
 VoidBar turns the unused space around the MacBook notch into a focused set of everyday tools: media controls, a temporary file shelf, clipboard history, notes, translation, meetings, Pomodoro, weather, and more. It opens on hover, closes when you leave, and never asks you to organize another window.
 
@@ -59,6 +59,11 @@ shasum -a 256 -c VoidBar-<version>-arm64.dmg.sha256
 Release images are built from the tagged source by [GitHub Actions](.github/workflows/release.yml), which also publishes a build provenance attestation.
 
 ## What lives inside
+
+### See everything at once
+
+- **Overview** — the first thing the panel shows: what is playing, the next meeting, the focus timer, the weather, and your coding agents' limits or the last thing you copied. Every widget opens its full tab.
+- **Live island** — while music plays or a timer runs, the notch grows a wing on each side, like a Dynamic Island: the cover or a timer ring on the left, a live equalizer or countdown on the right.
 
 ### Move things
 
@@ -99,6 +104,7 @@ Numbers update when either tool gets a response. A window whose reset time has p
 
 - Native SwiftUI and AppKit UI with no third-party runtime dependencies.
 - Hover-first interaction with keyboard focus only when a text tool needs it.
+- A panel that feels alive: it pours out of the notch, light runs along its edge, widgets cascade in, and a soft aurora picks up the colours of what is on screen.
 - English and Ukrainian localization.
 - Optional launch at login and a menu bar control.
 - Customizable tab order and visibility.

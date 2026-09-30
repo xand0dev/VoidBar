@@ -43,15 +43,17 @@ echo "==> encoding"
 MEDIA="$ROOT/build/media"
 mkdir -p "$MEDIA"
 for scene in walkthrough usage-tour; do
-    ffmpeg -v error -y -f concat -i "$WORK/$scene.ffconcat" -vf "\
-fps=15,scale=880:-1:flags=lanczos,split[a][b];\
-[a]palettegen=max_colors=96:stats_mode=diff:reserve_transparent=0[p];\
-[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
-        -loop 0 "$ASSETS/$scene$SUFFIX.gif"
     ffmpeg -v error -y -f concat -i "$WORK/$scene.ffconcat" \
         -vf "fps=30,scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p" \
         -c:v libx264 -preset slow -crf 14 -tune animation -movflags +faststart -an \
         "$MEDIA/$scene$SUFFIX.mp4"
+    # The GIF is made from the MP4: video encoding smooths the aurora's
+    # gradients, which the GIF palette then needs far fewer bytes to hold.
+    ffmpeg -v error -y -i "$MEDIA/$scene$SUFFIX.mp4" -vf "\
+fps=12,scale=800:-1:flags=lanczos,split[a][b];\
+[a]palettegen=max_colors=96:stats_mode=diff:reserve_transparent=0[p];\
+[b][p]paletteuse=dither=bayer:bayer_scale=5:diff_mode=rectangle" \
+        -loop 0 "$ASSETS/$scene$SUFFIX.gif"
 done
 
 for still in media usage; do
@@ -68,5 +70,5 @@ fi
 
 for file in "$ASSETS"/walkthrough$SUFFIX.gif "$ASSETS"/usage-tour$SUFFIX.gif \
     "$ASSETS"/media$SUFFIX.png "$ASSETS"/usage$SUFFIX.png "$MEDIA"/*$SUFFIX.mp4; do
-    echo "    $(basename "$file") $(du -h "$file" | cut -f1 | tr -d ' ')"
+    echo "    $(basename "$file") $(( $(stat -f %z "$file") / 1024 )) KB"
 done
