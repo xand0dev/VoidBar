@@ -18,7 +18,10 @@ case "$LANGUAGE" in
 esac
 command -v ffmpeg >/dev/null || { echo "ffmpeg is required" >&2; exit 1; }
 
-ASSETS="$ROOT/docs/assets"
+# VOIDBAR_ASSETS_OUT sends the README media elsewhere, for recordings that
+# must not replace the committed ones.
+ASSETS="${VOIDBAR_ASSETS_OUT:-$ROOT/docs/assets}"
+mkdir -p "$ASSETS"
 WORK="$(mktemp -d)"
 trap 'rm -rf "$WORK"' EXIT
 

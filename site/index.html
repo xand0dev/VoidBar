@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VoidBar — the MacBook notch, finally useful</title>
+<meta name="description" content="VoidBar is a free, open-source, native macOS panel for the MacBook notch: an Overview of what matters, a live island, media, shelf, clipboard, notes, snippets, translation, focus timer, and Claude Code and Codex limits.">
+<meta name="theme-color" content="#050507">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VoidBar — the MacBook notch, finally useful">
+<meta property="og:description" content="A native, open-source productivity panel for the MacBook notch. No Electron, no account, no server.">
+<meta property="og:image" content="https://xand0dev.github.io/VoidBar/media/og.png">
+<meta property="og:url" content="https://xand0dev.github.io/VoidBar/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="media/icon.png">
+<style>
+:root {
+  --bg: #050507;
+  --bg-2: #0b0c10;
+  --card: rgba(255,255,255,0.045);
+  --card-hi: rgba(255,255,255,0.08);
+  --line: rgba(255,255,255,0.09);
+  --text: rgba(255,255,255,0.94);
+  --muted: rgba(255,255,255,0.6);
+  --faint: rgba(255,255,255,0.38);
+  --accent: #85a8ff;
+  --accent-deep: #6b72fa;
+  --radius: 22px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { color: inherit; }
+img, video { display: block; max-width: 100%; }
+.wrap { width: min(1160px, calc(100% - 32px)); margin: 0 auto; }
+
+/* Aurora behind the hero */
+.aurora {
+  position: absolute; inset: -20% -10% auto; height: 900px; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(40% 45% at 30% 40%, color-mix(in srgb, var(--accent) 45%, transparent), transparent 70%),
+    radial-gradient(35% 40% at 70% 35%, color-mix(in srgb, var(--accent-deep) 40%, transparent), transparent 70%),
+    radial-gradient(30% 35% at 50% 70%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 70%);
+  filter: blur(40px);
+  opacity: .55;
+  animation: drift 16s ease-in-out infinite alternate;
+  transition: background .6s;
+}
+@keyframes drift { from { transform: translate3d(-3%, 0, 0) scale(1); } to { transform: translate3d(3%, 4%, 0) scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .aurora { animation: none; } html { scroll-behavior: auto; } }
+
+/* Nav */
+nav {
+  position: sticky; top: 0; z-index: 20;
+  backdrop-filter: saturate(160%) blur(18px); -webkit-backdrop-filter: saturate(160%) blur(18px);
+  background: rgba(5,5,7,.62); border-bottom: 1px solid var(--line);
+}
+nav .wrap { display: flex; align-items: center; gap: 22px; height: 60px; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; text-decoration: none; letter-spacing: -.01em; }
+.brand img { width: 26px; height: 26px; border-radius: 7px; }
+nav .links { display: flex; gap: 20px; margin-left: auto; font-size: 14px; color: var(--muted); }
+nav .links a { text-decoration: none; }
+nav .links a:hover { color: var(--text); }
+.lang { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; font-size: 12px; font-weight: 600; }
+.lang button { background: none; border: 0; color: var(--faint); padding: 5px 10px; cursor: pointer; font: inherit; }
+.lang button[aria-pressed="true"] { color: var(--text); background: var(--card-hi); }
+@media (max-width: 720px) { nav .links { display: none; } .lang { margin-left: auto; } }
+
+/* Hero */
+header.hero { position: relative; padding: 88px 0 40px; text-align: center; }
+header.hero .wrap { position: relative; z-index: 1; }
+.eyebrow {
+  display: inline-flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; letter-spacing: .02em;
+  color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); padding: 6px 14px; border-radius: 999px;
+}
+h1 { font-size: clamp(40px, 7vw, 84px); line-height: 1.02; letter-spacing: -.035em; margin: 22px auto 18px; max-width: 15ch; font-weight: 800; }
+h1 .grad { background: linear-gradient(100deg, #fff 20%, var(--accent) 60%, var(--accent-deep)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.lede { font-size: clamp(17px, 2.2vw, 21px); color: var(--muted); max-width: 640px; margin: 0 auto; }
+.cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 34px 0 12px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 650; font-size: 16px;
+  padding: 14px 24px; border-radius: 14px; border: 1px solid var(--line); transition: transform .15s, background .2s, box-shadow .2s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn.primary { background: #fff; color: #000; border-color: #fff; box-shadow: 0 10px 40px color-mix(in srgb, var(--accent) 35%, transparent); }
+.btn.ghost { background: var(--card); }
+.btn.ghost:hover { background: var(--card-hi); }
+.btn svg { width: 18px; height: 18px; }
+.meta { font-size: 13px; color: var(--faint); }
+.meta a { color: var(--muted); }
+
+.stage {
+  position: relative; margin: 54px auto 0; max-width: 1040px; border-radius: 28px; overflow: hidden;
+  border: 1px solid var(--line); background: #0d0e11;
+  box-shadow: 0 40px 120px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.03) inset;
+}
+.stage video { width: 100%; height: auto; }
+
+/* Sections */
+section { padding: 96px 0; position: relative; }
+.kicker { font-size: 13px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+h2 { font-size: clamp(30px, 4.4vw, 52px); line-height: 1.06; letter-spacing: -.03em; margin: 12px 0 16px; font-weight: 780; }
+.sub { color: var(--muted); font-size: 18px; max-width: 620px; }
+.split { display: grid; grid-template-columns: 1fr 1.25fr; gap: 56px; align-items: center; }
+.split.flip { grid-template-columns: 1.25fr 1fr; }
+.split.flip > :first-child { order: 2; }
+@media (max-width: 900px) { .split, .split.flip { grid-template-columns: 1fr; gap: 30px; } .split.flip > :first-child { order: 0; } }
+.shot { border-radius: 20px; overflow: hidden; border: 1px solid var(--line); box-shadow: 0 30px 80px rgba(0,0,0,.55); background: #0d0e11; }
+ul.ticks { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 12px; }
+ul.ticks li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; color: var(--muted); }
+ul.ticks li::before {
+  content: ""; width: 18px; height: 18px; margin-top: 3px; border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 20%, transparent)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat;
+}
+ul.ticks b { color: var(--text); font-weight: 600; }
+
+.island { margin-top: 28px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); max-width: 560px; }
+
+/* Tab gallery */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 22px; }
+.chip {
+  border: 1px solid var(--line); background: var(--card); color: var(--muted); font: inherit; font-size: 14px; font-weight: 600;
+  padding: 8px 14px; border-radius: 999px; cursor: pointer; transition: background .2s, color .2s, border-color .2s;
+}
+.chip:hover { color: var(--text); }
+.chip[aria-selected="true"] { color: #000; background: #fff; border-color: #fff; }
+.gallery { display: grid; grid-template-columns: 1.6fr 1fr; gap: 36px; align-items: center; }
+.gallery p { color: var(--muted); font-size: 17px; }
+.gallery h3 { font-size: 26px; margin: 0 0 8px; letter-spacing: -.02em; }
+@media (max-width: 900px) { .gallery { grid-template-columns: 1fr; } }
+.gallery .shot img { transition: opacity .25s; }
+
+/* Grid of small features */
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 40px; }
+@media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+.tile {
+  padding: 22px; border-radius: 18px; border: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+}
+.tile h4 { margin: 12px 0 6px; font-size: 17px; letter-spacing: -.01em; }
+.tile p { margin: 0; color: var(--muted); font-size: 15px; }
+.icon { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
+.icon svg { width: 19px; height: 19px; }
+
+/* Make it yours */
+.swatches { display: flex; gap: 12px; margin: 26px 0 10px; }
+.swatch {
+  width: 42px; height: 42px; border-radius: 50%; border: 0; cursor: pointer; position: relative;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.12) inset;
+}
+.swatch[aria-pressed="true"]::after { content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 2px solid #fff; }
+.swatch-label { color: var(--faint); font-size: 14px; }
+
+/* Privacy + install */
+.cards2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 36px; }
+@media (max-width: 760px) { .cards2 { grid-template-columns: 1fr; } }
+ol.steps { counter-reset: s; list-style: none; padding: 0; margin: 30px 0 0; display: grid; gap: 14px; }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: start; padding: 18px; border-radius: 16px; border: 1px solid var(--line); background: var(--card); }
+ol.steps li::before { content: counter(s); width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; font-weight: 700; background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
+ol.steps b { display: block; margin-bottom: 2px; }
+ol.steps span { color: var(--muted); font-size: 15px; }
+code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 14px; }
+pre { background: #0c0d10; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; color: var(--muted); margin: 10px 0 0; }
+.note { font-size: 14px; color: var(--faint); margin-top: 16px; }
+
+/* Final CTA */
+.final { text-align: center; padding: 110px 0 120px; }
+.final h2 { max-width: 16ch; margin: 12px auto 16px; }
+footer { border-top: 1px solid var(--line); padding: 30px 0 44px; color: var(--faint); font-size: 14px; }
+footer .wrap { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+footer .right { margin-left: auto; display: flex; gap: 18px; }
+footer a { text-decoration: none; color: var(--muted); }
+footer a:hover { color: var(--text); }
+
+.reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="media/icon.png" alt="">VoidBar</a>
+    <div class="links">
+      <a href="#overview" data-i18n="nav.features">Features</a>
+      <a href="#limits" data-i18n="nav.limits">AI limits</a>
+      <a href="#install" data-i18n="nav.install">Install</a>
+      <a href="https://github.com/xand0dev/VoidBar">GitHub</a>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en" aria-pressed="true">EN</button>
+      <button type="button" data-lang="uk" aria-pressed="false">UA</button>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="aurora" aria-hidden="true"></div>
+  <div class="wrap">
+    <span class="eyebrow" data-i18n="hero.eyebrow">Free · Open source · Native for macOS</span>
+    <h1><span data-i18n="hero.title1">Your MacBook notch,</span> <span class="grad" data-i18n="hero.title2">finally useful.</span></h1>
+    <p class="lede" data-i18n="hero.lede">VoidBar turns the dead space around the notch into a panel that opens on hover: music, files, clipboard, notes, translation, focus, and your AI coding limits — then gets out of the way.</p>
+    <div class="cta">
+      <a class="btn primary" id="download" href="https://github.com/xand0dev/VoidBar/releases/latest">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.4 12.6c0-2.4 2-3.5 2-3.6-1.1-1.6-2.8-1.8-3.4-1.8-1.4-.1-2.8.9-3.5.9s-1.8-.9-3-.8c-1.5 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.8-2.3.9-1.3 1.3-2.6 1.3-2.6s-2.5-1-2.5-3.7zM14.2 5.6c.6-.8 1.1-1.8 1-2.9-.9 0-2.1.6-2.7 1.4-.6.7-1.1 1.8-1 2.8 1 .1 2.1-.5 2.7-1.3z"/></svg>
+        <span data-i18n="hero.download">Download for macOS</span>
+      </a>
+      <a class="btn ghost" href="https://github.com/xand0dev/VoidBar">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5a11.5 11.5 0 0 0-3.6 22.4c.6.1.8-.3.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.8 1.3 3.5 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0c2.2-1.5 3.2-1.2 3.2-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.9 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.3c0 .3.2.7.8.6A11.5 11.5 0 0 0 12 .5z"/></svg>
+        <span data-i18n="hero.github">View the source</span>
+      </a>
+    </div>
+    <p class="meta"><span id="release-line" data-i18n="hero.meta">macOS 15+ · Apple Silicon · Not notarized —</span> <a href="#install" data-i18n="hero.firstLaunch">first-launch steps</a></p>
+
+    <div class="stage reveal">
+      <video id="hero-video" src="media/walkthrough.mp4" poster="media/walkthrough-poster.jpg" muted loop playsinline preload="metadata"
+             aria-label="VoidBar walkthrough: the notch grows into a live island, opens onto the Overview, then a focus timer, translation, and clipboard history."></video>
+    </div>
+  </div>
+</header>
+
+<section id="overview">
+  <div class="wrap split">
+    <div class="reveal">
+      <div class="kicker" data-i18n="overview.kicker">Overview</div>
+      <h2 data-i18n="overview.title">Everything you use, at a glance.</h2>
+      <p class="sub" data-i18n="overview.sub">The panel opens onto an Overview built from the tabs you actually keep. No weather if you never check it — just what matters to you.</p>
+      <ul class="ticks">
+        <li><span data-i18n-html="overview.t1"><b>The player takes the big card</b> while something plays; the rest fill a grid.</span></li>
+        <li><span data-i18n-html="overview.t2"><b>Copy in one click</b> — the latest clipboard entries and your snippets.</span></li>
+        <li><span data-i18n-html="overview.t3"><b>Focus timer, latest note, shelf, AI limits</b> — each opens its full tab.</span></li>
+        <li><span data-i18n-html="overview.t4"><b>Your order</b> — switch widgets on and off in Preferences.</span></li>
+      </ul>
+    </div>
+    <div class="shot reveal"><img src="media/home.jpg" width="1200" height="370" loading="lazy" alt="VoidBar Overview with now playing, clipboard, focus timer, latest note, and snippets"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap split flip">
+    <div class="reveal">
+      <div class="kicker" data-i18n="island.kicker">Live island</div>
+      <h2 data-i18n="island.title">The notch comes alive.</h2>
+      <p class="sub" data-i18n="island.sub">While music plays or a focus session runs, the notch grows a wing on each side — the cover or a progress ring on the left, a live equalizer or countdown on the right. Hover, and it pours open.</p>
+      <div class="island"><img src="media/island.jpg" width="1000" height="98" loading="lazy" alt="The folded notch with a timer ring on the left wing and the countdown on the right"></div>
+    </div>
+    <div class="shot reveal"><img src="media/media.jpg" width="1200" height="370" loading="lazy" alt="VoidBar music controls with an original demo cover"></div>
+  </div>
+</section>
+
+<section id="tabs">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="kicker" data-i18n="tabs.kicker">Inside</div>
+      <h2 data-i18n="tabs.title">Thirteen small tools. One hover away.</h2>
+      <p class="sub" data-i18n="tabs.sub">Every tab can be hidden or reordered. Pick one to see it.</p>
+    </div>
+    <div class="chips" role="tablist" id="chips"></div>
+    <div class="gallery reveal">
+      <div class="shot"><img id="gallery-img" src="media/timer.jpg" width="1200" height="370" alt=""></div>
+      <div>
+        <h3 id="gallery-title"></h3>
+        <p id="gallery-text"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="wrap split">
+    <div class="reveal">
+      <div class="kicker" data-i18n="limits.kicker">For AI coders</div>
+      <h2 data-i18n="limits.title">Claude Code and Codex limits, in the notch.</h2>
+      <p class="sub" data-i18n="limits.sub">See how much of your five-hour and weekly windows is left, and when each resets. Read from local files — no sign-in, no network.</p>
+      <ul class="ticks">
+        <li><span data-i18n-html="limits.t1"><b>Codex</b> works out of the box from its own session logs.</span></li>
+        <li><span data-i18n-html="limits.t2"><b>Claude Code</b>: copy one status-line setting from the Usage tab.</span></li>
+        <li><span data-i18n-html="limits.t3"><b>Amber and red</b> only when a limit gets tight.</span></li>
+      </ul>
+    </div>
+    <div class="shot reveal">
+      <video src="media/usage-tour.mp4" poster="media/usage.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Usage tab with Claude Code and Codex limits updating after a new Codex response"></video>
+    </div>
+  </div>
+</section>
+
+<section id="yours">
+  <div class="wrap split flip">
+    <div class="reveal">
+      <div class="kicker" data-i18n="yours.kicker">Make it yours</div>
+      <h2 data-i18n="yours.title">Your colours. Your aurora.</h2>
+      <p class="sub" data-i18n="yours.sub">Pick an accent — six presets or any colour — and let the aurora follow what is on screen, your accent, or turn it off. The panel itself stays black, so it always melts into the notch.</p>
+      <div class="swatches" role="group" aria-label="Accent">
+        <button class="swatch" type="button" data-accent="ocean" aria-pressed="true" style="background:#85a8ff" title="Ocean"></button>
+        <button class="swatch" type="button" data-accent="blood" aria-pressed="false" style="background:#db1221" title="Blood red"></button>
+      </div>
+      <div class="swatch-label" data-i18n="yours.hint">Try it: this page follows your pick too.</div>
+    </div>
+    <div class="shot reveal"><img id="yours-img" src="media/home.jpg" width="1200" height="370" loading="lazy" alt="The Overview in the chosen accent"></div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="reveal">
+      <div class="kicker" data-i18n="privacy.kicker">Privacy</div>
+      <h2 data-i18n="privacy.title">No account. No analytics. No server.</h2>
+      <p class="sub" data-i18n="privacy.sub">VoidBar is native SwiftUI and AppKit — no Electron. Everything stays on your Mac unless a feature you opened says otherwise.</p>
+    </div>
+    <div class="cards2">
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div><h4 data-i18n="privacy.c1t">Clipboard stays in memory</h4><p data-i18n="privacy.c1">History lives only while VoidBar runs. Password managers' entries are ignored.</p></div>
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/><circle cx="12" cy="12" r="9"/></svg></div><h4 data-i18n="privacy.c2t">Every request is documented</h4><p data-i18n="privacy.c2">Weather, TickTick, and Spotify artwork are VoidBar's only network calls — each listed in PRIVACY.md.</p></div>
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h10M4 17h7"/></svg></div><h4 data-i18n="privacy.c3t">Translation on device</h4><p data-i18n="privacy.c3">English ↔ Ukrainian through Apple's Translation framework, not a cloud service.</p></div>
+      <div class="tile reveal"><div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18l6-6-6-6"/></svg></div><h4 data-i18n="privacy.c4t">MIT, open source</h4><p data-i18n="privacy.c4">Read every line on GitHub, build it yourself in one command, or verify the release checksum.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <div class="reveal">
+      <div class="kicker" data-i18n="install.kicker">Install</div>
+      <h2 data-i18n="install.title">Up and running in a minute.</h2>
+      <p class="sub" data-i18n="install.sub">macOS 15 Sequoia or later on an Apple Silicon Mac.</p>
+    </div>
+    <ol class="steps">
+      <li class="reveal"><div><b data-i18n="install.s1t">Download the disk image</b><span data-i18n-html="install.s1">Get the latest <code>VoidBar-…-arm64.dmg</code> from GitHub Releases.</span></div></li>
+      <li class="reveal"><div><b data-i18n="install.s2t">Drag VoidBar to Applications</b><span data-i18n="install.s2">Then open it. Its icon appears in the menu bar and the panel opens when you hover over the notch.</span></div></li>
+      <li class="reveal"><div><b data-i18n="install.s3t">Allow the first launch</b><span data-i18n-html="install.s3">The build is not notarized yet, so macOS warns once. Choose <b>Done</b> (not Move to Trash), open <b>System Settings → Privacy &amp; Security</b>, and click <b>Open Anyway</b>.</span></div></li>
+    </ol>
+    <p class="note" data-i18n="install.verify">Optional: verify the download against the checksum published with the release.</p>
+    <pre>shasum -a 256 -c VoidBar-*-arm64.dmg.sha256</pre>
+    <p class="note" data-i18n="install.source">Prefer to build it yourself?</p>
+    <pre>git clone https://github.com/xand0dev/VoidBar.git &amp;&amp; cd VoidBar &amp;&amp; ./Scripts/bundle.sh &amp;&amp; open build/VoidBar.app</pre>
+  </div>
+</section>
+
+<section class="final">
+  <div class="aurora" aria-hidden="true" style="top:10%; height:600px; opacity:.35"></div>
+  <div class="wrap" style="position:relative; z-index:1">
+    <div class="kicker" data-i18n="final.kicker">Free and open source</div>
+    <h2 data-i18n="final.title">Give your notch something to do.</h2>
+    <div class="cta">
+      <a class="btn primary" id="download-2" href="https://github.com/xand0dev/VoidBar/releases/latest"><span data-i18n="hero.download">Download for macOS</span></a>
+      <a class="btn ghost" href="https://github.com/xand0dev/VoidBar"><span data-i18n="final.star">Star on GitHub</span></a>
+    </div>
+    <p class="meta" data-i18n="final.note">If VoidBar earns a place in your menu bar, consider starring the repository.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>VoidBar · MIT License</span>
+    <div class="right">
+      <a href="https://github.com/xand0dev/VoidBar/releases" data-i18n="footer.releases">Releases</a>
+      <a href="https://github.com/xand0dev/VoidBar/blob/main/PRIVACY.md" data-i18n="footer.privacy">Privacy</a>
+      <a href="https://github.com/xand0dev/VoidBar/discussions" data-i18n="footer.discuss">Discussions</a>
+      <a href="https://github.com/xand0dev/VoidBar">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const T = {
+    en: {
+      "nav.features": "Features", "nav.limits": "AI limits", "nav.install": "Install",
+      "hero.eyebrow": "Free · Open source · Native for macOS",
+      "hero.title1": "Your MacBook notch,", "hero.title2": "finally useful.",
+      "hero.lede": "VoidBar turns the dead space around the notch into a panel that opens on hover: music, files, clipboard, notes, translation, focus, and your AI coding limits — then gets out of the way.",
+      "hero.download": "Download for macOS", "hero.github": "View the source",
+      "hero.meta": "macOS 15+ · Apple Silicon · Not notarized —", "hero.firstLaunch": "first-launch steps",
+      "overview.kicker": "Overview", "overview.title": "Everything you use, at a glance.",
+      "overview.sub": "The panel opens onto an Overview built from the tabs you actually keep. No weather if you never check it — just what matters to you.",
+      "overview.t1": "<b>The player takes the big card</b> while something plays; the rest fill a grid.",
+      "overview.t2": "<b>Copy in one click</b> — the latest clipboard entries and your snippets.",
+      "overview.t3": "<b>Focus timer, latest note, shelf, AI limits</b> — each opens its full tab.",
+      "overview.t4": "<b>Your order</b> — switch widgets on and off in Preferences.",
+      "island.kicker": "Live island", "island.title": "The notch comes alive.",
+      "island.sub": "While music plays or a focus session runs, the notch grows a wing on each side — the cover or a progress ring on the left, a live equalizer or countdown on the right. Hover, and it pours open.",
+      "tabs.kicker": "Inside", "tabs.title": "Thirteen small tools. One hover away.", "tabs.sub": "Every tab can be hidden or reordered. Pick one to see it.",
+      "limits.kicker": "For AI coders", "limits.title": "Claude Code and Codex limits, in the notch.",
+      "limits.sub": "See how much of your five-hour and weekly windows is left, and when each resets. Read from local files — no sign-in, no network.",
+      "limits.t1": "<b>Codex</b> works out of the box from its own session logs.",
+      "limits.t2": "<b>Claude Code</b>: copy one status-line setting from the Usage tab.",
+      "limits.t3": "<b>Amber and red</b> only when a limit gets tight.",
+      "yours.kicker": "Make it yours", "yours.title": "Your colours. Your aurora.",
+      "yours.sub": "Pick an accent — six presets or any colour — and let the aurora follow what is on screen, your accent, or turn it off. The panel itself stays black, so it always melts into the notch.",
+      "yours.hint": "Try it: this page follows your pick too.",
+      "privacy.kicker": "Privacy", "privacy.title": "No account. No analytics. No server.",
+      "privacy.sub": "VoidBar is native SwiftUI and AppKit — no Electron. Everything stays on your Mac unless a feature you opened says otherwise.",
+      "privacy.c1t": "Clipboard stays in memory", "privacy.c1": "History lives only while VoidBar runs. Password managers' entries are ignored.",
+      "privacy.c2t": "Every request is documented", "privacy.c2": "Weather, TickTick, and Spotify artwork are VoidBar's only network calls — each listed in PRIVACY.md.",
+      "privacy.c3t": "Translation on device", "privacy.c3": "English ↔ Ukrainian through Apple's Translation framework, not a cloud service.",
+      "privacy.c4t": "MIT, open source", "privacy.c4": "Read every line on GitHub, build it yourself in one command, or verify the release checksum.",
+      "install.kicker": "Install", "install.title": "Up and running in a minute.", "install.sub": "macOS 15 Sequoia or later on an Apple Silicon Mac.",
+      "install.s1t": "Download the disk image", "install.s1": "Get the latest <code>VoidBar-…-arm64.dmg</code> from GitHub Releases.",
+      "install.s2t": "Drag VoidBar to Applications", "install.s2": "Then open it. Its icon appears in the menu bar and the panel opens when you hover over the notch.",
+      "install.s3t": "Allow the first launch", "install.s3": "The build is not notarized yet, so macOS warns once. Choose <b>Done</b> (not Move to Trash), open <b>System Settings → Privacy &amp; Security</b>, and click <b>Open Anyway</b>.",
+      "install.verify": "Optional: verify the download against the checksum published with the release.",
+      "install.source": "Prefer to build it yourself?",
+      "final.kicker": "Free and open source", "final.title": "Give your notch something to do.", "final.star": "Star on GitHub",
+      "final.note": "If VoidBar earns a place in your menu bar, consider starring the repository.",
+      "footer.releases": "Releases", "footer.privacy": "Privacy", "footer.discuss": "Discussions",
+      "release": (v, mb) => `Version ${v} · ${mb} MB · macOS 15+ · Apple Silicon · Not notarized —`
+    },
+    uk: {
+      "nav.features": "Можливості", "nav.limits": "Ліміти ШІ", "nav.install": "Встановлення",
+      "hero.eyebrow": "Безкоштовно · Відкритий код · Нативно для macOS",
+      "hero.title1": "Виріз MacBook,", "hero.title2": "нарешті корисний.",
+      "hero.lede": "VoidBar перетворює мертву зону навколо вирізу на панель, що відкривається наведенням: музика, файли, буфер, нотатки, переклад, фокус і ліміти ваших ШІ-агентів — а потім не заважає.",
+      "hero.download": "Завантажити для macOS", "hero.github": "Вихідний код",
+      "hero.meta": "macOS 15+ · Apple Silicon · Без нотаризації —", "hero.firstLaunch": "як запустити вперше",
+      "overview.kicker": "Огляд", "overview.title": "Усе, чим ви користуєтеся, — одним поглядом.",
+      "overview.sub": "Панель відкривається на «Огляді», зібраному з вкладок, які ви лишили. Жодної погоди, якщо ви її не дивитеся, — лише те, що важливо вам.",
+      "overview.t1": "<b>Плеєр займає велику картку</b>, поки грає музика; решта заповнює сітку.",
+      "overview.t2": "<b>Копіювання одним кліком</b> — останні записи буфера й ваші шаблони.",
+      "overview.t3": "<b>Фокус-таймер, остання нотатка, полиця, ліміти ШІ</b> — кожен відкриває свою вкладку.",
+      "overview.t4": "<b>Ваш порядок</b> — вмикайте й вимикайте віджети в налаштуваннях.",
+      "island.kicker": "Живий острів", "island.title": "Виріз оживає.",
+      "island.sub": "Поки грає музика чи йде фокус-сесія, виріз виростає крилами з обох боків — обкладинка або кільце прогресу ліворуч, живий еквалайзер чи відлік праворуч. Наведіть — і панель виливається.",
+      "tabs.kicker": "Всередині", "tabs.title": "Тринадцять маленьких інструментів. Одне наведення.", "tabs.sub": "Будь-яку вкладку можна сховати або переставити. Оберіть, щоб подивитися.",
+      "limits.kicker": "Для тих, хто кодить з ШІ", "limits.title": "Ліміти Claude Code і Codex — у вирізі.",
+      "limits.sub": "Скільки лишилося з п'ятигодинного й тижневого вікна та коли кожне скинеться. Читається з локальних файлів — без входу й без мережі.",
+      "limits.t1": "<b>Codex</b> працює одразу — з його власних журналів сесій.",
+      "limits.t2": "<b>Claude Code</b>: скопіюйте одне налаштування status line з вкладки «Ліміти».",
+      "limits.t3": "<b>Бурштиновий і червоний</b> — лише коли ліміт на межі.",
+      "yours.kicker": "Під себе", "yours.title": "Ваші кольори. Ваша аврора.",
+      "yours.sub": "Оберіть акцент — шість пресетів або будь-який колір — і нехай аврора підхоплює вміст екрана, ваш акцент або буде вимкнена. Сама панель лишається чорною, тож завжди зливається з вирізом.",
+      "yours.hint": "Спробуйте: сторінка теж змінює колір.",
+      "privacy.kicker": "Приватність", "privacy.title": "Без акаунта. Без аналітики. Без сервера.",
+      "privacy.sub": "VoidBar — нативний SwiftUI та AppKit, без Electron. Усе лишається на вашому Mac, якщо функція, яку ви відкрили, не каже інакше.",
+      "privacy.c1t": "Буфер — лише в пам'яті", "privacy.c1": "Історія існує, поки працює VoidBar. Записи менеджерів паролів ігноруються.",
+      "privacy.c2t": "Кожен запит задокументовано", "privacy.c2": "Погода, TickTick і обкладинки Spotify — єдині мережеві виклики VoidBar, кожен описано в PRIVACY.md.",
+      "privacy.c3t": "Переклад на пристрої", "privacy.c3": "Англійська ↔ українська через Translation framework від Apple, а не хмарний сервіс.",
+      "privacy.c4t": "MIT, відкритий код", "privacy.c4": "Читайте кожен рядок на GitHub, збирайте однією командою або звіряйте контрольну суму релізу.",
+      "install.kicker": "Встановлення", "install.title": "Запуск за хвилину.", "install.sub": "macOS 15 Sequoia або новіша на Mac з Apple Silicon.",
+      "install.s1t": "Завантажте образ", "install.s1": "Візьміть свіжий <code>VoidBar-…-arm64.dmg</code> з GitHub Releases.",
+      "install.s2t": "Перетягніть VoidBar у Програми", "install.s2": "І відкрийте. Іконка з'явиться в меню-барі, а панель відкриватиметься наведенням на виріз.",
+      "install.s3t": "Дозвольте перший запуск", "install.s3": "Збірка ще не нотаризована, тож macOS попередить один раз. Натисніть <b>Готово</b> (не «Перемістити в Смітник»), відкрийте <b>Системні параметри → Приватність і безпека</b> й натисніть <b>Відкрити все одно</b>.",
+      "install.verify": "За бажанням звірте завантажений файл із контрольною сумою з релізу.",
+      "install.source": "Хочете зібрати самі?",
+      "final.kicker": "Безкоштовно й відкрито", "final.title": "Дайте вирізу роботу.", "final.star": "Зірка на GitHub",
+      "final.note": "Якщо VoidBar заслужив місце у вашому меню-барі, поставте репозиторію зірку.",
+      "footer.releases": "Релізи", "footer.privacy": "Приватність", "footer.discuss": "Обговорення",
+      "release": (v, mb) => `Версія ${v} · ${mb} МБ · macOS 15+ · Apple Silicon · Без нотаризації —`
+    }
+  };
+
+  const TABS = [
+    { id: "timer", en: ["Focus timer", "A progress ring with the time inside, four durations, and today's sessions. The island keeps counting when the panel folds."], uk: ["Фокус-таймер", "Кільце прогресу з часом усередині, чотири тривалості й сесії за сьогодні. Острів рахує далі, коли панель згорнута."] },
+    { id: "translate", en: ["Translation", "Type in English, read Ukrainian — or the other way round. Apple's on-device Translation, no cloud."], uk: ["Переклад", "Пишіть англійською — читайте українською, або навпаки. Переклад Apple на пристрої, без хмари."] },
+    { id: "clipboard", en: ["Clipboard", "The last 40 copies with type chips and age. Click to copy again. Kept in memory only."], uk: ["Буфер", "Останні 40 копіювань із мітками типу й віком. Клік — і скопійовано знову. Лише в пам'яті."] },
+    { id: "shelf", en: ["Shelf", "Drop files on the notch, switch apps, and drag them out where they belong."], uk: ["Полиця", "Киньте файли на виріз, перейдіть в іншу програму й перетягніть їх куди треба."] },
+    { id: "notes", en: ["Notes", "A scratchpad that is always one hover away and survives restarts."], uk: ["Нотатки", "Чернетка на відстані одного наведення, що переживає перезапуск."] },
+    { id: "media", en: ["Music", "Now Playing from Apple Music, Spotify, and browsers, with seeking and a soft light in the cover's colour."], uk: ["Музика", "Now Playing з Apple Music, Spotify і браузерів, з перемотуванням і світлом у кольорі обкладинки."] },
+    { id: "calendar", en: ["Calendar", "Your next meeting with a countdown and a one-click Join button for Zoom, Meet, and Teams."], uk: ["Календар", "Наступна зустріч із відліком і кнопкою «Приєднатися» для Zoom, Meet і Teams."] },
+    { id: "weather", en: ["Weather", "Conditions, the day's range, and the next hours — only after you open the tab."], uk: ["Погода", "Умови, діапазон дня й найближчі години — лише після того, як ви відкриєте вкладку."] },
+    { id: "monitor", en: ["Monitor", "CPU, memory, and network in three calm tiles that warm up only under load."], uk: ["Монітор", "Процесор, пам'ять і мережа в трьох спокійних плитках, що «теплішають» лише під навантаженням."] },
+    { id: "usage", en: ["AI limits", "Claude Code and Codex five-hour and weekly windows, with reset times."], uk: ["Ліміти ШІ", "П'ятигодинні й тижневі вікна Claude Code і Codex з часом скидання."] }
+  ];
+
+  const ACCENTS = {
+    ocean: { accent: "#85a8ff", deep: "#6b72fa", img: "media/home.jpg" },
+    blood: { accent: "#e0182a", deep: "#8a0a16", img: "media/home-blood.jpg" }
+  };
+
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch {} }
+  };
+
+  let lang = new URLSearchParams(location.search).get("lang") || store.get("voidbar.lang") ||
+    ((navigator.language || "").toLowerCase().startsWith("uk") ? "uk" : "en");
+  if (!T[lang]) lang = "en";
+  let release = null;
+  let currentTab = "timer";
+
+  function applyLang() {
+    document.documentElement.lang = lang;
+    document.querySelectorAll("[data-i18n]").forEach(el => { const v = T[lang][el.dataset.i18n]; if (typeof v === "string") el.textContent = v; });
+    document.querySelectorAll("[data-i18n-html]").forEach(el => { const v = T[lang][el.dataset.i18nHtml]; if (typeof v === "string") el.innerHTML = v; });
+    document.querySelectorAll(".lang button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.lang === lang)));
+    renderChips();
+    showTab(currentTab);
+    if (release) document.getElementById("release-line").textContent = T[lang].release(release.version, release.mb);
+  }
+
+  function renderChips() {
+    const box = document.getElementById("chips");
+    box.innerHTML = "";
+    TABS.forEach(tab => {
+      const b = document.createElement("button");
+      b.className = "chip"; b.type = "button"; b.setAttribute("role", "tab");
+      b.textContent = tab[lang][0];
+      b.setAttribute("aria-selected", String(tab.id === currentTab));
+      b.addEventListener("click", () => showTab(tab.id));
+      box.appendChild(b);
+    });
+  }
+
+  function showTab(id) {
+    currentTab = id;
+    const tab = TABS.find(t => t.id === id);
+    const img = document.getElementById("gallery-img");
+    img.style.opacity = "0";
+    setTimeout(() => { img.src = `media/${id}.jpg`; img.alt = tab[lang][0]; img.style.opacity = "1"; }, 140);
+    document.getElementById("gallery-title").textContent = tab[lang][0];
+    document.getElementById("gallery-text").textContent = tab[lang][1];
+    document.querySelectorAll("#chips .chip").forEach((c, i) => c.setAttribute("aria-selected", String(TABS[i].id === id)));
+  }
+
+  function applyAccent(name) {
+    const a = ACCENTS[name] || ACCENTS.ocean;
+    document.documentElement.style.setProperty("--accent", a.accent);
+    document.documentElement.style.setProperty("--accent-deep", a.deep);
+    document.getElementById("yours-img").src = a.img;
+    document.querySelectorAll(".swatch").forEach(s => s.setAttribute("aria-pressed", String(s.dataset.accent === name)));
+    store.set("voidbar.accent", name);
+  }
+
+  document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => { lang = b.dataset.lang; store.set("voidbar.lang", lang); applyLang(); }));
+  document.querySelectorAll(".swatch").forEach(s => s.addEventListener("click", () => applyAccent(s.dataset.accent)));
+
+  // The download buttons point at the newest disk image when GitHub says what it is.
+  fetch("https://api.github.com/repos/xand0dev/VoidBar/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      const dmg = data && (data.assets || []).find(a => a.name.endsWith(".dmg"));
+      if (!dmg) return;
+      ["download", "download-2"].forEach(id => { document.getElementById(id).href = dmg.browser_download_url; });
+      release = { version: data.tag_name.replace(/^v/, ""), mb: (dmg.size / 1048576).toFixed(1) };
+      document.getElementById("release-line").textContent = T[lang].release(release.version, release.mb);
+    })
+    .catch(() => {});
+
+  // Motion: the hero video plays unless reduced motion is asked for.
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const hero = document.getElementById("hero-video");
+  if (!reduce) { hero.autoplay = true; hero.play().catch(() => {}); } else { hero.controls = true; }
+
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { threshold: 0.12 }) : null;
+  document.querySelectorAll(".reveal").forEach(el => io ? io.observe(el) : el.classList.add("in"));
+
+  applyAccent(store.get("voidbar.accent") || "ocean");
+  applyLang();
+})();
+</script>
+</body>
+</html>
