@@ -99,7 +99,9 @@ The Usage tab reads numbers the tools already produce, on this Mac, without any 
 - **Codex** writes its current limits into its own session logs after each response. VoidBar reads the newest one from `~/.codex/sessions`; nothing to set up.
 - **Claude Code** reports Pro and Max limits only to its [status line](https://code.claude.com/docs/en/statusline) command. In the Usage tab, choose **Copy setup** and paste the `statusLine` entry into `~/.claude/settings.json`. VoidBar then acts as that command: it prints a short line such as `Opus · 5h 24% · 7d 41%` for Claude Code, and keeps only the two limit windows in `~/Library/Application Support/VoidBar/claude-code-usage.json`. Claude Code runs status line commands in its terminal interface, so sessions started with the `claude` CLI keep the card current. If you already use a custom status line, keep yours; the Claude Code card simply stays empty.
 
-Numbers update when either tool gets a response. A window whose reset time has passed shows as reset until the next response brings fresh numbers.
+The status line only reports what the last response *in that terminal session* saw, so an idle session or work in the Claude app leaves those numbers behind. Press **↻** on the Claude Code card to read the exact numbers from your Claude account instead — the ones `/usage` shows. The first time, macOS asks whether VoidBar may read Claude Code's sign-in from the Keychain. VoidBar only asks when you press the button, never in the background, and never refreshes or changes that sign-in; if it has expired, run `claude` once. This uses the endpoint Claude Code itself calls, which is not a documented public API.
+
+Codex numbers update when Codex gets a response. A window whose reset time has passed shows as reset until the next response brings fresh numbers.
 
 ## Designed like a Mac app
 

@@ -100,4 +100,14 @@ final class AgentUsageTests: XCTestCase {
         decoder.dateDecodingStrategy = .secondsSince1970
         XCTAssertEqual(try decoder.decode(AgentUsage.self, from: encoder.encode(usage)), usage)
     }
+
+    @MainActor
+    func testEveryReadMovesTheClockEvenWithoutNewNumbers() async throws {
+        let store = AgentUsageStore()
+        await store.refresh()
+        let first = store.checkedAt
+        try await Task.sleep(for: .milliseconds(20))
+        await store.refresh()
+        XCTAssertGreaterThan(store.checkedAt, first)
+    }
 }

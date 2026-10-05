@@ -44,7 +44,14 @@ struct HomePane: View {
         }
         .padding(.top, 2)
         .animation(.spring(response: 0.4, dampingFraction: 0.85), value: plan)
-        .task { await usage.refresh() }
+        // Limits come from files the agents write; a slow re-read keeps the
+        // widget current and its countdowns ticking while the Overview shows.
+        .task {
+            while !Task.isCancelled {
+                await usage.refresh()
+                try? await Task.sleep(for: .seconds(15))
+            }
+        }
     }
 
     /// Two rows. A short last row stretches its cards rather than leaving a hole.
@@ -270,7 +277,7 @@ private struct LimitsWidget: View {
 
     @ViewBuilder
     private func row(_ name: String, _ agent: AgentUsage?) -> some View {
-        if let window = agent?.session?.current(at: Date()) {
+        if let window = agent?.session?.current(at: usage.checkedAt) {
             HStack(spacing: 6) {
                 Text(verbatim: name)
                     .font(Theme.captionEmphasis)

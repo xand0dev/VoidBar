@@ -92,7 +92,6 @@
 "Week" = "Week";
 "Copied" = "Copied";
 "Copy setup" = "Copy setup";
-"Add VoidBar as the Claude Code status line to see Pro and Max limits here." = "Add VoidBar as the Claude Code status line to see Pro and Max limits here.";
 "Paste it into ~/.claude/settings.json." = "Paste it into ~/.claude/settings.json.";
 "No Codex session yet. Limits appear after the first response." = "No Codex session yet. Limits appear after the first response.";
 "Window has reset" = "Window has reset";
@@ -177,3 +176,21 @@
 "Opening animations" = "Opening animations";
 "Appearance" = "Appearance";
 "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off." = "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off.";
+
+/* Usage freshness */
+"Updates when you use Claude Code in the terminal (claude CLI)." = "Updates when you use Claude Code in the terminal (claude CLI).";
+"Updates after your next Codex response." = "Updates after your next Codex response.";
+
+/* Claude account refresh */
+"Sign in to Claude Code in the terminal first (run claude)." = "Sign in to Claude Code in the terminal first (run claude).";
+"Keychain access was not allowed." = "Keychain access was not allowed.";
+"Claude Code's sign-in has expired. Run claude once, then refresh." = "Claude Code's sign-in has expired. Run claude once, then refresh.";
+"Claude's usage service answered %d." = "Claude's usage service answered %d.";
+"Claude's usage service sent something VoidBar could not read." = "Claude's usage service sent something VoidBar could not read.";
+"Could not reach Claude's usage service." = "Could not reach Claude's usage service.";
+"Press ↻ to refresh from your Claude account." = "Press ↻ to refresh from your Claude account.";
+"Status line numbers can be hours old. Press ↻ to read them from your Claude account." = "Status line numbers can be hours old. Press ↻ to read them from your Claude account.";
+"Refresh from your Claude account" = "Refresh from your Claude account";
+"Read Codex's logs again" = "Read Codex's logs again";
+"Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line." = "Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line.";
+"%d%% left" = "%d%% left";

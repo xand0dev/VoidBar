@@ -88,7 +88,6 @@
 "Week" = "Тиждень";
 "Copied" = "Скопійовано";
 "Copy setup" = "Скопіювати налаштування";
-"Add VoidBar as the Claude Code status line to see Pro and Max limits here." = "Додайте VoidBar як status line у Claude Code, щоб бачити тут ліміти Pro і Max.";
 "Paste it into ~/.claude/settings.json." = "Вставте його у ~/.claude/settings.json.";
 "No Codex session yet. Limits appear after the first response." = "Сесій Codex ще немає. Ліміти з'являться після першої відповіді.";
 "Window has reset" = "Вікно ліміту оновилося";
@@ -173,3 +172,21 @@
 "Opening animations" = "Анімації відкриття";
 "Appearance" = "Вигляд";
 "The panel itself stays black so it blends into the notch. With System Settings → Accessibility → Reduce motion on, animations stay off." = "Сама панель лишається чорною, щоб зливатися з вирізом. Якщо в Системних параметрах → Доступність увімкнено «Зменшити рух», анімації вимкнені.";
+
+/* Usage freshness */
+"Updates when you use Claude Code in the terminal (claude CLI)." = "Оновлюється, коли ви працюєте з Claude Code у терміналі (claude CLI).";
+"Updates after your next Codex response." = "Оновиться після наступної відповіді Codex.";
+
+/* Claude account refresh */
+"Sign in to Claude Code in the terminal first (run claude)." = "Спершу увійдіть у Claude Code в терміналі (команда claude).";
+"Keychain access was not allowed." = "Доступ до Keychain не дозволено.";
+"Claude Code's sign-in has expired. Run claude once, then refresh." = "Вхід Claude Code застарів. Запустіть claude один раз і оновіть знову.";
+"Claude's usage service answered %d." = "Сервіс лімітів Claude відповів кодом %d.";
+"Claude's usage service sent something VoidBar could not read." = "Сервіс лімітів Claude надіслав відповідь, яку VoidBar не зміг прочитати.";
+"Could not reach Claude's usage service." = "Не вдалося зв'язатися із сервісом лімітів Claude.";
+"Press ↻ to refresh from your Claude account." = "Натисніть ↻, щоб оновити з акаунта Claude.";
+"Status line numbers can be hours old. Press ↻ to read them from your Claude account." = "Числа зі status line можуть бути багатогодинної давності. Натисніть ↻, щоб узяти їх з акаунта Claude.";
+"Refresh from your Claude account" = "Оновити з акаунта Claude";
+"Read Codex's logs again" = "Перечитати журнали Codex";
+"Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line." = "Натисніть ↻, щоб узяти ліміти Pro і Max з акаунта Claude, або додайте VoidBar як status line у Claude Code.";
+"%d%% left" = "залишилось %d%%";

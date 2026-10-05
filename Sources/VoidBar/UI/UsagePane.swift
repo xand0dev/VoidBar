@@ -12,14 +12,28 @@ struct UsagePane: View {
                 symbol: "sparkle",
                 usage: usage.claude,
                 loaded: usage.loaded,
-                empty: .claudeSetup
+                empty: .claudeSetup,
+                now: usage.checkedAt,
+                staleHint: usage.claude?.origin == .account
+                    ? localized("Press ↻ to refresh from your Claude account.")
+                    : localized("Status line numbers can be hours old. Press ↻ to read them from your Claude account."),
+                refreshing: usage.claudeRefreshing,
+                error: usage.claudeError,
+                refreshHelp: localized("Refresh from your Claude account"),
+                refresh: { Task { await usage.refreshClaudeFromAccount() } }
             )
             AgentCard(
                 name: "Codex",
                 symbol: "chevron.left.forwardslash.chevron.right",
                 usage: usage.codex,
                 loaded: usage.loaded,
-                empty: .codexMissing
+                empty: .codexMissing,
+                now: usage.checkedAt,
+                staleHint: localized("Updates after your next Codex response."),
+                refreshing: false,
+                error: nil,
+                refreshHelp: localized("Read Codex's logs again"),
+                refresh: { Task { await usage.refresh() } }
             )
         }
         .padding(.top, 2)
@@ -43,6 +57,15 @@ private struct AgentCard: View {
     let usage: AgentUsage?
     let loaded: Bool
     let empty: Empty
+    /// The store's last read; a new value redraws the countdowns.
+    let now: Date
+    /// Said when the numbers are over an hour old: they only move when the
+    /// tool itself reports, which is easy to forget.
+    let staleHint: String
+    let refreshing: Bool
+    let error: String?
+    let refreshHelp: String
+    let refresh: () -> Void
 
     @State private var copied = false
 
@@ -64,24 +87,52 @@ private struct AgentCard: View {
                 }
                 Spacer(minLength: 4)
                 if let usage {
-                    Text(UsageFormat.updated(usage.recordedAt))
+                    Text(UsageFormat.updated(usage.recordedAt, now: now))
                         .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(Theme.tertiary)
                         .lineLimit(1)
                 }
+                Button(action: refresh) {
+                    Image(systemName: "arrow.clockwise")
+                        .rotationEffect(.degrees(refreshing ? 360 : 0))
+                        .animation(
+                            refreshing ? .linear(duration: 0.9).repeatForever(autoreverses: false) : .default,
+                            value: refreshing
+                        )
+                }
+                .buttonStyle(NotchButtonStyle(size: 22))
+                .disabled(refreshing)
+                .help(refreshHelp)
             }
 
             if let usage {
-                // Read once per redraw, so both rows agree about "now".
-                let now = Date()
                 if let session = usage.session {
                     WindowRow(title: localized("5 hours"), window: session, now: now)
                 }
                 if let weekly = usage.weekly {
                     WindowRow(title: localized("Week"), window: weekly, now: now)
                 }
+                if let error {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(Theme.warning)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else if now.timeIntervalSince(usage.recordedAt) > 3600 {
+                    Label(staleHint, systemImage: "clock.arrow.circlepath")
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(Theme.tertiary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             } else if loaded {
                 emptyState
+                if let error {
+                    Label(error, systemImage: "exclamationmark.triangle")
+                        .font(.system(size: 9.5))
+                        .foregroundStyle(Theme.warning)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             } else {
                 Spacer(minLength: 0)
             }
@@ -96,7 +147,7 @@ private struct AgentCard: View {
         switch empty {
         case .claudeSetup:
             VStack(alignment: .leading, spacing: 7) {
-                Text(localized("Add VoidBar as the Claude Code status line to see Pro and Max limits here."))
+                Text(localized("Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line."))
                     .font(.system(size: 10.5))
                     .foregroundStyle(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -149,10 +200,16 @@ private struct WindowRow: View {
                     .foregroundStyle(Theme.primary)
             }
             CapsuleProgress(fraction: fraction, tint: UsageFormat.tint(for: current.usedPercent), height: 5)
-            Text(UsageFormat.reset(window, now: now))
-                .font(.system(size: 9, weight: .medium).monospacedDigit())
-                .foregroundStyle(Theme.tertiary)
-                .lineLimit(1)
+            HStack(spacing: 6) {
+                Text(UsageFormat.reset(window, now: now))
+                Spacer(minLength: 4)
+                // ChatGPT and Codex speak in what is left; saying both makes
+                // the numbers easy to check against them.
+                Text(localized("%d%% left", Int((100 - current.usedPercent).rounded())))
+            }
+            .font(.system(size: 9, weight: .medium).monospacedDigit())
+            .foregroundStyle(Theme.tertiary)
+            .lineLimit(1)
         }
     }
 }
