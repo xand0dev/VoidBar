@@ -92,7 +92,6 @@
 "Week" = "Week";
 "Copied" = "Copied";
 "Copy setup" = "Copy setup";
-"Add VoidBar as the Claude Code status line to see Pro and Max limits here." = "Add VoidBar as the Claude Code status line to see Pro and Max limits here.";
 "Paste it into ~/.claude/settings.json." = "Paste it into ~/.claude/settings.json.";
 "No Codex session yet. Limits appear after the first response." = "No Codex session yet. Limits appear after the first response.";
 "Window has reset" = "Window has reset";
