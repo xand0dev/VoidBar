@@ -164,6 +164,8 @@ struct NotchContentView: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(Theme.tertiary)
             }
+        case .sound:
+            EmptyView()
         case .shelf:
             counter(vm.shelf.items.count)
         case .clipboard:
@@ -255,6 +257,8 @@ struct NotchContentView: View {
             HomePane(vm: vm, tabs: vm.tabManager, usage: vm.usage, notes: vm.notes, snippets: vm.snippets)
         case .media:
             MediaPane(media: vm.media)
+        case .sound:
+            SoundPane(sound: vm.sound, nowPlaying: vm.media.sourceName)
         case .shelf:
             ShelfPane(shelf: vm.shelf, isTargeted: vm.isDropTargeted)
         case .clipboard:

@@ -190,3 +190,15 @@
 "Read Codex's logs again" = "Перечитати журнали Codex";
 "Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line." = "Натисніть ↻, щоб узяти ліміти Pro і Max з акаунта Claude, або додайте VoidBar як status line у Claude Code.";
 "%d%% left" = "залишилось %d%%";
+
+/* Sound */
+"Sound" = "Звук";
+"Output" = "Вивід";
+"Microphone" = "Мікрофон";
+"Apps" = "Програми";
+"Mute" = "Вимкнути звук";
+"Unmute" = "Увімкнути звук";
+"Apps playing sound appear here" = "Тут з'являться програми, що грають звук";
+"Back to 100%" = "Повернути 100%";
+"None" = "Немає";
+"Allow VoidBar under System Audio Recording to change app volumes." = "Дозвольте VoidBar у розділі «Запис системного звуку», щоб змінювати гучність програм.";

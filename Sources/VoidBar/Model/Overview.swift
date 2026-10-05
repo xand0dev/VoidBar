@@ -4,13 +4,14 @@ import Foundation
 /// while that tab is switched on, so turning off Weather also takes the
 /// weather off the Overview.
 enum OverviewWidget: String, CaseIterable, Codable, Identifiable {
-    case nowPlaying, limits, clipboard, focus, notes, snippets, shelf, tasks, calendar, weather, monitor
+    case nowPlaying, sound, limits, clipboard, focus, notes, snippets, shelf, tasks, calendar, weather, monitor
 
     var id: String { rawValue }
 
     var tab: NotchViewModel.Tab {
         switch self {
         case .nowPlaying: return .media
+        case .sound: return .sound
         case .limits: return .usage
         case .clipboard: return .clipboard
         case .focus: return .timer
@@ -27,6 +28,7 @@ enum OverviewWidget: String, CaseIterable, Codable, Identifiable {
     var title: String {
         switch self {
         case .nowPlaying: return localized("Now playing")
+        case .sound: return localized("Sound")
         case .limits: return localized("AI limits")
         case .clipboard: return localized("Clipboard")
         case .focus: return localized("Focus")

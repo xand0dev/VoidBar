@@ -4,13 +4,14 @@ import Combine
 @MainActor
 final class NotchViewModel: ObservableObject {
     enum Tab: String, CaseIterable, Identifiable, Codable {
-        case home, media, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks, usage
+        case home, media, sound, shelf, clipboard, snippets, calendar, timer, translate, notes, teleprompter, monitor, weather, tasks, usage
         var id: String { rawValue }
 
         var symbol: String {
             switch self {
             case .home: return "square.grid.2x2.fill"
             case .media: return "music.note"
+            case .sound: return "slider.vertical.3"
             case .shelf: return "tray.full.fill"
             case .clipboard: return "list.clipboard.fill"
             case .snippets: return "pin.fill"
@@ -30,6 +31,7 @@ final class NotchViewModel: ObservableObject {
             switch self {
             case .home: return localized("Overview")
             case .media: return localized("Music")
+            case .sound: return localized("Sound")
             case .shelf: return localized("Shelf")
             case .clipboard: return localized("Clipboard")
             case .snippets: return localized("Snippets")
@@ -112,6 +114,7 @@ final class NotchViewModel: ObservableObject {
     let weather: WeatherStore
     let tickTick: TickTickStore
     let usage: AgentUsageStore
+    let sound: SoundStore
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -130,6 +133,7 @@ final class NotchViewModel: ObservableObject {
         self.weather = WeatherStore()
         self.tickTick = TickTickStore()
         self.usage = AgentUsageStore()
+        self.sound = SoundStore()
         // Open on the first tab of the rail — the overview, unless it was
         // switched off or moved.
         tab = tabManager.activeTabs.first ?? .media
@@ -216,6 +220,7 @@ final class NotchViewModel: ObservableObject {
         // never prompts on its own.
         calendar.start()
         monitor.start()
+        sound.start()
 
         // Screenshots reach the shelf through here whether they were taken on
         // this Mac or on a phone: a copy made on the phone arrives in the same
@@ -239,6 +244,8 @@ final class NotchViewModel: ObservableObject {
         clipboard.stop()
         calendar.stop()
         monitor.stop()
+        // Taps go with the app anyway; stopping them first is just tidier.
+        sound.stop()
         weather.stop()
         // Whatever was typed makes it to disk even when quitting mid-thought.
         notes.flush()
