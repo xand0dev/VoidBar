@@ -272,16 +272,17 @@ struct VolumeSlider: View {
     var body: some View {
         GeometryReader { geo in
             let width = geo.size.width
-            let fraction = (min(max(value, range.lowerBound), range.upperBound) - range.lowerBound)
-                / (range.upperBound - range.lowerBound)
-            let thickness = hovering ? height + 2 : height
+            let span = range.upperBound - range.lowerBound
+            let fraction = CGFloat((min(max(value, range.lowerBound), range.upperBound) - range.lowerBound) / span)
+            let thickness: CGFloat = hovering ? height + 2 : height
+            let knob: CGFloat = thickness + 6
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.white.opacity(0.1)).frame(height: thickness)
                 Capsule()
                     .fill(LinearGradient(colors: [tint.opacity(0.75), tint], startPoint: .leading, endPoint: .trailing))
                     .frame(width: max(thickness, width * fraction), height: thickness)
                 if let mark {
-                    let x = width * (mark - range.lowerBound) / (range.upperBound - range.lowerBound)
+                    let x = width * CGFloat((mark - range.lowerBound) / span)
                     Rectangle()
                         .fill(Color.white.opacity(0.35))
                         .frame(width: 1.5, height: thickness + 6)
@@ -289,9 +290,9 @@ struct VolumeSlider: View {
                 }
                 Circle()
                     .fill(.white)
-                    .frame(width: thickness + 6, height: thickness + 6)
+                    .frame(width: knob, height: knob)
                     .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
-                    .offset(x: min(max(width * fraction - (thickness + 6) / 2, 0), width - thickness - 6))
+                    .offset(x: min(max(width * fraction - knob / 2, 0), width - knob))
                     .opacity(hovering ? 1 : 0)
             }
             .frame(maxHeight: .infinity)
@@ -301,10 +302,10 @@ struct VolumeSlider: View {
                 DragGesture(minimumDistance: 0)
                     .onChanged { drag in
                         guard width > 0, isEnabled else { return }
-                        var raw = range.lowerBound
-                            + (range.upperBound - range.lowerBound) * min(max(drag.location.x / width, 0), 1)
+                        let position = Double(min(max(drag.location.x / width, 0), 1))
+                        var raw = range.lowerBound + span * position
                         // Snap to the mark so 100% is easy to land on.
-                        if let mark, abs(raw - mark) < (range.upperBound - range.lowerBound) * 0.03 { raw = mark }
+                        if let mark, abs(raw - mark) < span * 0.03 { raw = mark }
                         value = raw
                     }
             )
