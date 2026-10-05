@@ -194,3 +194,15 @@
 "Read Codex's logs again" = "Read Codex's logs again";
 "Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line." = "Press ↻ to read Pro and Max limits from your Claude account, or add VoidBar as the Claude Code status line.";
 "%d%% left" = "%d%% left";
+
+/* Sound */
+"Sound" = "Sound";
+"Output" = "Output";
+"Microphone" = "Microphone";
+"Apps" = "Apps";
+"Mute" = "Mute";
+"Unmute" = "Unmute";
+"Apps playing sound appear here" = "Apps playing sound appear here";
+"Back to 100%" = "Back to 100%";
+"None" = "None";
+"Allow VoidBar under System Audio Recording to change app volumes." = "Allow VoidBar under System Audio Recording to change app volumes.";

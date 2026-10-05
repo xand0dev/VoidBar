@@ -55,6 +55,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <string>VoidBar shows upcoming meetings and a button to join them.</string>
     <key>NSCalendarsUsageDescription</key>
     <string>VoidBar shows upcoming meetings and a button to join them.</string>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>VoidBar changes the volume of individual apps by passing their sound through to your speakers at the level you set. Nothing is recorded or saved.</string>
     <key>NSHumanReadableCopyright</key><string>MIT License</string>
 </dict>
 </plist>

@@ -75,6 +75,7 @@ struct HomePane: View {
     private func hasContent(_ widget: OverviewWidget) -> Bool {
         switch widget {
         case .nowPlaying: return vm.media.track != nil
+        case .sound: return vm.sound.output != nil
         case .limits: return usage.claude != nil || usage.codex != nil
         case .clipboard: return !vm.clipboard.items.isEmpty
         case .focus: return true
@@ -93,6 +94,7 @@ struct HomePane: View {
         let open = { vm.select(widget.tab) }
         switch widget {
         case .nowPlaying: NowPlayingWidget(media: vm.media, open: open)
+        case .sound: SoundWidget(sound: vm.sound, open: open)
         case .limits: LimitsWidget(usage: usage, open: open)
         case .clipboard: ClipboardWidget(clipboard: vm.clipboard, open: open)
         case .focus: FocusWidget(timer: vm.timer, open: open)
@@ -252,6 +254,41 @@ private struct NowPlayingWidget: View {
                             .foregroundStyle(Theme.tertiary)
                     }
                     .padding(.top, 6)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Sound
+
+private struct SoundWidget: View {
+    @ObservedObject var sound: SoundStore
+    let open: () -> Void
+
+    var body: some View {
+        Widget(open: open) {
+            VStack(alignment: .leading, spacing: 6) {
+                WidgetTitle(
+                    symbol: sound.output?.symbol ?? "speaker.wave.2",
+                    text: sound.output?.name ?? localized("Sound"),
+                    trailing: "\(Int((sound.muted ? 0 : sound.volume) * 100))%"
+                )
+                Spacer(minLength: 0)
+                HStack(spacing: 6) {
+                    Button {
+                        sound.setMuted(!sound.muted)
+                    } label: {
+                        Image(systemName: sound.muted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                    }
+                    .buttonStyle(NotchButtonStyle(size: 24))
+                    VolumeSlider(
+                        value: Binding(get: { sound.muted ? 0 : sound.volume }, set: { sound.setVolume($0) }),
+                        range: 0...1,
+                        tint: sound.muted ? Theme.tertiary : Theme.accent,
+                        height: 6
+                    )
+                    .disabled(!sound.volumeSettable)
                 }
             }
         }
