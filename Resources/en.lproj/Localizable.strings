@@ -206,3 +206,9 @@
 "Back to 100%" = "Back to 100%";
 "None" = "None";
 "Allow VoidBar under System Audio Recording to change app volumes." = "Allow VoidBar under System Audio Recording to change app volumes.";
+
+/* Keep awake */
+"Mac is kept awake — click to allow sleep" = "Mac is kept awake — click to allow sleep";
+"Keep the Mac awake" = "Keep the Mac awake";
+"Scroll to change, click to mute" = "Scroll to change, click to mute";
+"Click to mute, scroll to change" = "Click to mute, scroll to change";

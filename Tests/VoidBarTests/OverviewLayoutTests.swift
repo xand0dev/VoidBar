@@ -12,14 +12,14 @@ final class OverviewLayoutTests: XCTestCase {
     func testPlayerTakesTheHeroAndFourTilesFollowInOrder() {
         let plan = OverviewLayout.plan(order: configs(OverviewWidget.allCases), activeTabs: everything) { _ in true }
         XCTAssertEqual(plan.hero, .nowPlaying)
-        XCTAssertEqual(plan.tiles, [.sound, .limits, .clipboard, .focus])
+        XCTAssertEqual(plan.tiles, [.limits, .clipboard, .focus, .notes])
     }
 
     func testWithoutMusicTheGridHasSixTiles() {
         let plan = OverviewLayout.plan(order: configs(OverviewWidget.allCases), activeTabs: everything) { $0 != .nowPlaying }
         XCTAssertNil(plan.hero)
         XCTAssertEqual(plan.tiles.count, 6)
-        XCTAssertEqual(plan.tiles.first, .sound)
+        XCTAssertEqual(plan.tiles.first, .limits)
     }
 
     func testWidgetsOfSwitchedOffTabsNeverAppear() {
@@ -35,7 +35,7 @@ final class OverviewLayoutTests: XCTestCase {
             order: configs(OverviewWidget.allCases, off: [.limits]),
             activeTabs: everything
         ) { $0 != .clipboard }
-        XCTAssertEqual(plan.tiles.prefix(3), [.sound, .focus, .notes])
+        XCTAssertEqual(plan.tiles.prefix(2), [.focus, .notes])
     }
 
     func testUserOrderIsKept() {

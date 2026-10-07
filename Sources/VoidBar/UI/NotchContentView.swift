@@ -140,9 +140,12 @@ struct NotchContentView: View {
             Color.clear.frame(width: vm.geometry.notchSize.width, height: 1)
             Spacer(minLength: 0)
             if isOpen {
-                trailing
-                    .padding(.trailing, 20)
-                    .transition(.opacity)
+                HStack(spacing: 12) {
+                    trailing
+                    HeaderTools(sound: vm.sound, caffeine: vm.caffeine)
+                }
+                .padding(.trailing, 14)
+                .transition(.opacity)
             }
         }
         .frame(height: vm.geometry.notchSize.height)
@@ -283,6 +286,108 @@ struct NotchContentView: View {
             TasksPane(store: vm.tickTick)
         case .usage:
             UsagePane(usage: vm.usage)
+        }
+    }
+}
+
+/// The keep-awake switch: a cup that fills and glows while the Mac is held
+/// awake, the same thing `caffeinate -d` does.
+private struct CaffeineButton: View {
+    @ObservedObject var caffeine: CaffeineStore
+
+    var body: some View {
+        Button {
+            caffeine.toggle()
+            HapticManager.play(.alignment)
+        } label: {
+            Image(systemName: caffeine.isOn ? "cup.and.heat.waves.fill" : "cup.and.saucer")
+                .font(.system(size: 10.5, weight: .semibold))
+                .foregroundStyle(caffeine.isOn ? Theme.accent : Color.white.opacity(0.4))
+                .frame(width: 24, height: 20)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(caffeine.isOn ? Theme.accent.opacity(0.16) : .clear)
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(caffeine.isOn ? localized("Mac is kept awake — click to allow sleep") : localized("Keep the Mac awake"))
+        .animation(Theme.contentAnimation, value: caffeine.isOn)
+    }
+}
+
+/// Volume and keep-awake, small, at the right of the header: a speaker (click
+/// to mute, scroll to change), a short slider, and the cup.
+private struct HeaderTools: View {
+    @ObservedObject var sound: SoundStore
+    @ObservedObject var caffeine: CaffeineStore
+
+    private var level: Double { sound.muted ? 0 : sound.volume }
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button {
+                sound.setMuted(!sound.muted)
+                HapticManager.play(.alignment)
+            } label: {
+                Image(systemName: symbol)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(level == 0 ? Theme.critical : Color.white.opacity(0.6))
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(localized("Click to mute, scroll to change"))
+            VolumeSlider(
+                value: Binding(get: { level }, set: { sound.setVolume($0) }),
+                range: 0...1,
+                tint: sound.muted ? Theme.tertiary : Theme.accent,
+                height: 3
+            )
+            .frame(width: 64)
+            .disabled(!sound.volumeSettable)
+            CaffeineButton(caffeine: caffeine)
+        }
+        .overlay(ScrollCatcher { delta in
+            sound.setVolume(min(max(sound.volume + delta * 0.02, 0), 1))
+        })
+        .task {
+            // The level also moves from the keyboard; read it while open.
+            while !Task.isCancelled {
+                sound.refresh()
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+
+    private var symbol: String {
+        if level == 0 { return "speaker.slash.fill" }
+        return level < 0.34 ? "speaker.wave.1.fill" : (level < 0.67 ? "speaker.wave.2.fill" : "speaker.wave.3.fill")
+    }
+}
+
+/// Reports vertical scrolling over a view, without taking clicks.
+private struct ScrollCatcher: NSViewRepresentable {
+    let onScroll: (Double) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = CatcherView()
+        view.onScroll = onScroll
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        (view as? CatcherView)?.onScroll = onScroll
+    }
+
+    final class CatcherView: NSView {
+        var onScroll: ((Double) -> Void)?
+        override func scrollWheel(with event: NSEvent) {
+            onScroll?(Double(event.scrollingDeltaY))
+        }
+        // Clicks and hovers pass through to the icon underneath.
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            NSApp.currentEvent?.type == .scrollWheel ? self : nil
         }
     }
 }

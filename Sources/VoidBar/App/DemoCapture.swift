@@ -710,6 +710,7 @@ enum DemoGallery {
         vm.monitor.networkUploadSpeed = 320 * 1024
         vm.teleprompter.text = "Hi, I'm showing VoidBar today. It lives in the MacBook notch, opens when you hover, and gets out of the way when you leave."
         vm.usage.showDemo(claude: DemoScript.claudeUsage(), codex: DemoScript.codexUsage())
+        vm.sound.showDemo()
     }
 }
 
