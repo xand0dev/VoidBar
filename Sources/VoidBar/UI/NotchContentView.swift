@@ -140,9 +140,12 @@ struct NotchContentView: View {
             Color.clear.frame(width: vm.geometry.notchSize.width, height: 1)
             Spacer(minLength: 0)
             if isOpen {
-                trailing
-                    .padding(.trailing, 20)
-                    .transition(.opacity)
+                HStack(spacing: 12) {
+                    trailing
+                    HeaderTools(sound: vm.sound, caffeine: vm.caffeine)
+                }
+                .padding(.trailing, 14)
+                .transition(.opacity)
             }
         }
         .frame(height: vm.geometry.notchSize.height)
@@ -223,7 +226,7 @@ struct NotchContentView: View {
         HStack(spacing: 12) {
             Rail(vm: vm, tabs: vm.tabManager.leftRail, side: -1)
             panes
-            Rail(vm: vm, tabs: vm.tabManager.rightRail, side: 1, showsTools: true)
+            Rail(vm: vm, tabs: vm.tabManager.rightRail, side: 1)
         }
         .padding(.horizontal, 12)
         .padding(.top, 2)
@@ -298,11 +301,11 @@ private struct CaffeineButton: View {
             HapticManager.play(.alignment)
         } label: {
             Image(systemName: caffeine.isOn ? "cup.and.heat.waves.fill" : "cup.and.saucer")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: 10.5, weight: .semibold))
                 .foregroundStyle(caffeine.isOn ? Theme.accent : Color.white.opacity(0.4))
-                .frame(width: 30, height: 22)
+                .frame(width: 24, height: 20)
                 .background(
-                    RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
                         .fill(caffeine.isOn ? Theme.accent.opacity(0.16) : .clear)
                 )
                 .contentShape(Rectangle())
@@ -313,48 +316,48 @@ private struct CaffeineButton: View {
     }
 }
 
-/// The system volume as one icon: click to mute, scroll to change the level.
-private struct RailVolume: View {
+/// Volume and keep-awake, small, at the right of the header: a speaker (click
+/// to mute, scroll to change), a short slider, and the cup.
+private struct HeaderTools: View {
     @ObservedObject var sound: SoundStore
-    @State private var hovering = false
+    @ObservedObject var caffeine: CaffeineStore
 
     private var level: Double { sound.muted ? 0 : sound.volume }
 
     var body: some View {
-        Image(systemName: symbol)
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(level == 0 ? Theme.critical : Color.white.opacity(hovering ? 0.9 : 0.5))
-            .frame(width: 30, height: 22)
-            .background(alignment: .bottom) {
-                // The level, as a thin line under the icon.
-                Capsule()
-                    .fill(Theme.accent.opacity(0.9))
-                    .frame(width: 22 * level, height: 2)
-                    .frame(width: 22, alignment: .leading)
-                    .offset(y: 1)
-                    .opacity(hovering || level != 1 ? 1 : 0)
-            }
-            .background(
-                RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
-                    .fill(hovering ? Theme.surface : .clear)
-            )
-            .contentShape(Rectangle())
-            .onHover { hovering = $0 }
-            .onTapGesture {
+        HStack(spacing: 4) {
+            Button {
                 sound.setMuted(!sound.muted)
                 HapticManager.play(.alignment)
+            } label: {
+                Image(systemName: symbol)
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(level == 0 ? Theme.critical : Color.white.opacity(0.6))
+                    .frame(width: 20, height: 20)
+                    .contentShape(Rectangle())
             }
-            .overlay(ScrollCatcher { delta in
-                sound.setVolume(min(max(sound.volume + delta * 0.02, 0), 1))
-            })
-            .help("\(Int(level * 100))% · " + localized("Scroll to change, click to mute"))
-            .task {
-                // The level also moves from the keyboard; read it while open.
-                while !Task.isCancelled {
-                    sound.refresh()
-                    try? await Task.sleep(for: .seconds(1))
-                }
+            .buttonStyle(.plain)
+            .help(localized("Click to mute, scroll to change"))
+            VolumeSlider(
+                value: Binding(get: { level }, set: { sound.setVolume($0) }),
+                range: 0...1,
+                tint: sound.muted ? Theme.tertiary : Theme.accent,
+                height: 3
+            )
+            .frame(width: 64)
+            .disabled(!sound.volumeSettable)
+            CaffeineButton(caffeine: caffeine)
+        }
+        .overlay(ScrollCatcher { delta in
+            sound.setVolume(min(max(sound.volume + delta * 0.02, 0), 1))
+        })
+        .task {
+            // The level also moves from the keyboard; read it while open.
+            while !Task.isCancelled {
+                sound.refresh()
+                try? await Task.sleep(for: .seconds(1))
             }
+        }
     }
 
     private var symbol: String {
@@ -418,8 +421,6 @@ private struct Rail: View {
     let tabs: [NotchViewModel.Tab]
     /// -1 for the left rail, 1 for the right: which way the icons arrive from.
     let side: CGFloat
-    /// The right rail also carries the volume and keep-awake buttons.
-    var showsTools = false
 
     @State private var hovered: NotchViewModel.Tab?
     /// The active highlight is one view that moves between icons.
@@ -478,11 +479,6 @@ private struct Rail: View {
                         hovered = nil
                     }
                 }
-            }
-            if showsTools {
-                Capsule().fill(Color.white.opacity(0.1)).frame(width: 14, height: 1).padding(.vertical, 3)
-                RailVolume(sound: vm.sound)
-                CaffeineButton(caffeine: vm.caffeine)
             }
         }
         .frame(width: 30)

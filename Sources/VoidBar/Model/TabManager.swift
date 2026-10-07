@@ -89,9 +89,7 @@ final class TabManager: ObservableObject {
         configs.filter { $0.isEnabled }.map { $0.id }
     }
     
-    /// The right rail also holds the volume and keep-awake buttons, which count
-    /// as two places when the tabs are divided between the sides.
-    private static let toolSlots = 2
+    private static let toolSlots = 0
 
     var leftRail: [NotchViewModel.Tab] {
         let active = activeTabs
