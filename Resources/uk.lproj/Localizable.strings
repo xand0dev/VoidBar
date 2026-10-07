@@ -202,3 +202,7 @@
 "Back to 100%" = "Повернути 100%";
 "None" = "Немає";
 "Allow VoidBar under System Audio Recording to change app volumes." = "Дозвольте VoidBar у розділі «Запис системного звуку», щоб змінювати гучність програм.";
+
+/* Keep awake */
+"Mac is kept awake — click to allow sleep" = "Mac не засинає — натисніть, щоб дозволити сон";
+"Keep the Mac awake" = "Не давати Mac засинати";

@@ -220,15 +220,24 @@ struct NotchContentView: View {
     // MARK: - Body
 
     private var content: some View {
-        HStack(spacing: 12) {
-            Rail(vm: vm, tabs: vm.tabManager.leftRail, side: -1)
+        VStack(spacing: 8) {
+            topBar
             panes
-            Rail(vm: vm, tabs: vm.tabManager.rightRail, side: 1)
         }
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 14)
         .padding(.top, 2)
         .padding(.bottom, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Every tab in one row, and the keep-awake switch at its end.
+    private var topBar: some View {
+        HStack(spacing: 0) {
+            Rail(vm: vm, tabs: vm.tabManager.activeTabs)
+            Spacer(minLength: 8)
+            CaffeineButton(caffeine: vm.caffeine)
+        }
+        .frame(height: 26)
     }
 
     private var panes: some View {
@@ -287,6 +296,32 @@ struct NotchContentView: View {
     }
 }
 
+/// The keep-awake switch: a cup that fills and glows while the Mac is held
+/// awake, the same thing `caffeinate -d` does.
+private struct CaffeineButton: View {
+    @ObservedObject var caffeine: CaffeineStore
+
+    var body: some View {
+        Button {
+            caffeine.toggle()
+            HapticManager.play(.alignment)
+        } label: {
+            Image(systemName: caffeine.isOn ? "cup.and.heat.waves.fill" : "cup.and.saucer")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(caffeine.isOn ? Theme.accent : Color.white.opacity(0.4))
+                .frame(width: 30, height: 22)
+                .background(
+                    RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                        .fill(caffeine.isOn ? Theme.accent.opacity(0.16) : .clear)
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .help(caffeine.isOn ? localized("Mac is kept awake — click to allow sleep") : localized("Keep the Mac awake"))
+        .animation(Theme.contentAnimation, value: caffeine.isOn)
+    }
+}
+
 /// Watches the note store itself rather than reading through the view model:
 /// notes are born and deleted inside the pane while this counter is on
 /// screen, and the view model deliberately does not forward keystroke-driven
@@ -312,10 +347,7 @@ private struct NotesCounter: View {
 /// screen" from "the mouse came to the notch" in `PointerWatcher`.
 private struct Rail: View {
     @ObservedObject var vm: NotchViewModel
-    /// Which icons this rail carries — there are two rails now, one per side.
     let tabs: [NotchViewModel.Tab]
-    /// -1 for the left rail, 1 for the right: which way the icons arrive from.
-    let side: CGFloat
 
     @State private var hovered: NotchViewModel.Tab?
     /// The active highlight is one view that moves between icons.
@@ -326,7 +358,7 @@ private struct Rail: View {
     private let dwell = Duration.milliseconds(150)
 
     var body: some View {
-        VStack(spacing: 1) {
+        HStack(spacing: 2) {
             ForEach(Array(tabs.enumerated()), id: \.element) { index, tab in
                 Button {
                     vm.select(tab)
@@ -366,7 +398,7 @@ private struct Rail: View {
                 }
                 .buttonStyle(.plain)
                 .help(tab.title)
-                .reveal(delay: 0.06 + Double(index) * 0.035, dx: side * 12, dy: 0)
+                .reveal(delay: 0.04 + Double(index) * 0.025, dx: 0, dy: -6)
                 .onHover { inside in
                     if inside {
                         hovered = tab
@@ -376,8 +408,6 @@ private struct Rail: View {
                 }
             }
         }
-        .frame(width: 30)
-        .frame(maxHeight: .infinity, alignment: .center)
         .animation(Theme.contentAnimation, value: hovered)
         .animation(.spring(response: 0.34, dampingFraction: 0.78), value: vm.tab)
         // Moving to another icon cancels the pending switch along with the

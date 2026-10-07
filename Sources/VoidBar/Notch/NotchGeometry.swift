@@ -12,7 +12,7 @@ struct NotchGeometry {
     let isPhysical: Bool
 
     /// Size of the fully expanded panel body.
-    let expandedSize = CGSize(width: 700, height: 236)
+    let expandedSize = CGSize(width: 700, height: 256)
     /// Slack around the panel so the concave shoulders and shadow are not clipped.
     let windowPadding = NSEdgeInsets(top: 0, left: 40, bottom: 44, right: 40)
 

@@ -58,7 +58,7 @@ struct SoundPane: View {
             }
             Spacer(minLength: 0)
             HStack {
-                SectionLabel(text: localized("Microphone"))
+                SectionLabel(text: localized("Microphone")).fixedSize()
                 Spacer(minLength: 6)
                 DeviceMenu(devices: sound.inputs, current: sound.input) { sound.select(input: $0) }
             }
@@ -242,6 +242,8 @@ private struct DeviceMenu: View {
                 Text(current?.name ?? localized("None"))
                     .font(Theme.captionEmphasis)
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 104, alignment: .leading)
                 Image(systemName: "chevron.up.chevron.down")
                     .font(.system(size: 7, weight: .bold))
                     .foregroundStyle(Theme.tertiary)

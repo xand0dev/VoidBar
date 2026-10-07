@@ -115,6 +115,7 @@ final class NotchViewModel: ObservableObject {
     let tickTick: TickTickStore
     let usage: AgentUsageStore
     let sound: SoundStore
+    let caffeine: CaffeineStore
 
     private var cancellables = Set<AnyCancellable>()
 
@@ -134,6 +135,7 @@ final class NotchViewModel: ObservableObject {
         self.tickTick = TickTickStore()
         self.usage = AgentUsageStore()
         self.sound = SoundStore()
+        self.caffeine = CaffeineStore()
         // Open on the first tab of the rail — the overview, unless it was
         // switched off or moved.
         tab = tabManager.activeTabs.first ?? .media
@@ -246,6 +248,7 @@ final class NotchViewModel: ObservableObject {
         monitor.stop()
         // Taps go with the app anyway; stopping them first is just tidier.
         sound.stop()
+        caffeine.turnOff()
         weather.stop()
         // Whatever was typed makes it to disk even when quitting mid-thought.
         notes.flush()

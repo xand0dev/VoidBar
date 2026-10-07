@@ -50,6 +50,11 @@ final class SoundStore: ObservableObject {
     private var lastHeard: [String: Date] = [:]
     private let linger: TimeInterval = 45
 
+    #if DEBUG
+    /// Set by `showDemo`: no device, process, or tap is touched.
+    fileprivate(set) var showsDemo = false
+    #endif
+
     private let defaults: UserDefaults
     private let gainsKey = "sound.appGains"
     private let mutedKey = "sound.appMuted"
@@ -61,6 +66,9 @@ final class SoundStore: ObservableObject {
     // MARK: - Lifecycle
 
     func start() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         refresh()
         let system = AudioObjectID(kAudioObjectSystemObject)
         for selector in [
@@ -89,6 +97,9 @@ final class SoundStore: ObservableObject {
     /// Re-reads everything; cheap enough to call every second while the
     /// Sound tab is on screen, which also catches the volume keys.
     func refresh() {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
         let outs = AudioHAL.devices(.output)
         let ins = AudioHAL.devices(.input)
         if outs != outputs { outputs = outs }
@@ -160,6 +171,10 @@ final class SoundStore: ObservableObject {
     // MARK: - Apps
 
     func setGain(_ value: Double, for app: AppAudio) {
+        #if DEBUG
+        if showsDemo { return }
+        #endif
+
         var gains = savedGains
         gains[app.id] = abs(value - 1) < 0.01 ? nil : value
         defaults.set(gains, forKey: gainsKey)
@@ -299,3 +314,27 @@ final class SoundStore: ObservableObject {
         NSWorkspace.shared.open(url)
     }
 }
+
+#if DEBUG
+extension SoundStore {
+    /// Capture-only: invented devices and apps. See `DemoCapture`.
+    func showDemo() {
+        showsDemo = true
+        let speakers = AudioHAL.Device(id: 1, uid: "demo.speakers", name: "MacBook Pro Speakers",
+                                       transport: kAudioDeviceTransportTypeBuiltIn)
+        let mic = AudioHAL.Device(id: 2, uid: "demo.mic", name: "MacBook Pro Microphone",
+                                  transport: kAudioDeviceTransportTypeBuiltIn)
+        outputs = [speakers, AudioHAL.Device(id: 3, uid: "demo.buds", name: "Studio Buds", transport: kAudioDeviceTransportTypeBluetooth)]
+        inputs = [mic]
+        output = speakers
+        input = mic
+        volume = 0.62
+        inputVolume = 0.8
+        func app(_ name: String, _ gain: Double, playing: Bool) -> AppAudio {
+            AppAudio(id: "demo." + name, name: name, icon: nil, isPlaying: playing, processObjects: [],
+                     gain: gain, muted: false)
+        }
+        apps = [app("Demo Player", 1, playing: true), app("Browser", 0.45, playing: true), app("Video Call", 1.2, playing: true)]
+    }
+}
+#endif
