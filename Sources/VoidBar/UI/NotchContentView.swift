@@ -220,24 +220,28 @@ struct NotchContentView: View {
     // MARK: - Body
 
     private var content: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             topBar
-            panes
+            HStack(spacing: 12) {
+                Rail(vm: vm, tabs: vm.tabManager.leftRail, side: -1)
+                panes
+                Rail(vm: vm, tabs: vm.tabManager.rightRail, side: 1)
+            }
         }
-        .padding(.horizontal, 14)
+        .padding(.horizontal, 12)
         .padding(.top, 2)
         .padding(.bottom, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Every tab in one row, and the keep-awake switch at its end.
+    /// Just two things, at the right: the system volume and the keep-awake cup.
     private var topBar: some View {
-        HStack(spacing: 0) {
-            Rail(vm: vm, tabs: vm.tabManager.activeTabs)
-            Spacer(minLength: 8)
+        HStack(spacing: 10) {
+            Spacer(minLength: 0)
+            TopVolume(sound: vm.sound)
             CaffeineButton(caffeine: vm.caffeine)
         }
-        .frame(height: 26)
+        .frame(height: 22)
     }
 
     private var panes: some View {
@@ -322,6 +326,50 @@ private struct CaffeineButton: View {
     }
 }
 
+/// System volume in one line: mute, a slider, and the level. Opens the mixer
+/// on a click of the percentage.
+private struct TopVolume: View {
+    @ObservedObject var sound: SoundStore
+
+    private var level: Double { sound.muted ? 0 : sound.volume }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Button {
+                sound.setMuted(!sound.muted)
+            } label: {
+                Image(systemName: level == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(level == 0 ? Theme.critical : Color.white.opacity(0.7))
+                    .frame(width: 22, height: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(sound.muted ? localized("Unmute") : localized("Mute"))
+            VolumeSlider(
+                value: Binding(get: { level }, set: { sound.setVolume($0) }),
+                range: 0...1,
+                tint: sound.muted ? Theme.tertiary : Theme.accent,
+                height: 4
+            )
+            .frame(width: 110)
+            .disabled(!sound.volumeSettable)
+            Text("\(Int(level * 100))%")
+                .font(Theme.numeral(10.5, weight: .medium))
+                .foregroundStyle(Theme.secondary)
+                .frame(width: 32, alignment: .trailing)
+        }
+        // The system level changes from the keyboard too, so it is read while
+        // the panel is open.
+        .task {
+            while !Task.isCancelled {
+                sound.refresh()
+                try? await Task.sleep(for: .seconds(1))
+            }
+        }
+    }
+}
+
 /// Watches the note store itself rather than reading through the view model:
 /// notes are born and deleted inside the pane while this counter is on
 /// screen, and the view model deliberately does not forward keystroke-driven
@@ -347,7 +395,10 @@ private struct NotesCounter: View {
 /// screen" from "the mouse came to the notch" in `PointerWatcher`.
 private struct Rail: View {
     @ObservedObject var vm: NotchViewModel
+    /// Which icons this rail carries — there are two rails now, one per side.
     let tabs: [NotchViewModel.Tab]
+    /// -1 for the left rail, 1 for the right: which way the icons arrive from.
+    let side: CGFloat
 
     @State private var hovered: NotchViewModel.Tab?
     /// The active highlight is one view that moves between icons.
@@ -358,7 +409,7 @@ private struct Rail: View {
     private let dwell = Duration.milliseconds(150)
 
     var body: some View {
-        HStack(spacing: 2) {
+        VStack(spacing: 1) {
             ForEach(Array(tabs.enumerated()), id: \.element) { index, tab in
                 Button {
                     vm.select(tab)
@@ -398,7 +449,7 @@ private struct Rail: View {
                 }
                 .buttonStyle(.plain)
                 .help(tab.title)
-                .reveal(delay: 0.04 + Double(index) * 0.025, dx: 0, dy: -6)
+                .reveal(delay: 0.06 + Double(index) * 0.035, dx: side * 12, dy: 0)
                 .onHover { inside in
                     if inside {
                         hovered = tab
@@ -408,6 +459,8 @@ private struct Rail: View {
                 }
             }
         }
+        .frame(width: 30)
+        .frame(maxHeight: .infinity, alignment: .center)
         .animation(Theme.contentAnimation, value: hovered)
         .animation(.spring(response: 0.34, dampingFraction: 0.78), value: vm.tab)
         // Moving to another icon cancels the pending switch along with the
