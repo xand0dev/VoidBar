@@ -220,28 +220,15 @@ struct NotchContentView: View {
     // MARK: - Body
 
     private var content: some View {
-        VStack(spacing: 6) {
-            topBar
-            HStack(spacing: 12) {
-                Rail(vm: vm, tabs: vm.tabManager.leftRail, side: -1)
-                panes
-                Rail(vm: vm, tabs: vm.tabManager.rightRail, side: 1)
-            }
+        HStack(spacing: 12) {
+            Rail(vm: vm, tabs: vm.tabManager.leftRail, side: -1)
+            panes
+            Rail(vm: vm, tabs: vm.tabManager.rightRail, side: 1, showsTools: true)
         }
         .padding(.horizontal, 12)
         .padding(.top, 2)
         .padding(.bottom, 14)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    /// Just two things, at the right: the system volume and the keep-awake cup.
-    private var topBar: some View {
-        HStack(spacing: 10) {
-            Spacer(minLength: 0)
-            TopVolume(sound: vm.sound)
-            CaffeineButton(caffeine: vm.caffeine)
-        }
-        .frame(height: 22)
     }
 
     private var panes: some View {
@@ -326,46 +313,78 @@ private struct CaffeineButton: View {
     }
 }
 
-/// System volume in one line: mute, a slider, and the level. Opens the mixer
-/// on a click of the percentage.
-private struct TopVolume: View {
+/// The system volume as one icon: click to mute, scroll to change the level.
+private struct RailVolume: View {
     @ObservedObject var sound: SoundStore
+    @State private var hovering = false
 
     private var level: Double { sound.muted ? 0 : sound.volume }
 
     var body: some View {
-        HStack(spacing: 6) {
-            Button {
-                sound.setMuted(!sound.muted)
-            } label: {
-                Image(systemName: level == 0 ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(level == 0 ? Theme.critical : Color.white.opacity(0.7))
-                    .frame(width: 22, height: 22)
-                    .contentShape(Rectangle())
+        Image(systemName: symbol)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundStyle(level == 0 ? Theme.critical : Color.white.opacity(hovering ? 0.9 : 0.5))
+            .frame(width: 30, height: 22)
+            .background(alignment: .bottom) {
+                // The level, as a thin line under the icon.
+                Capsule()
+                    .fill(Theme.accent.opacity(0.9))
+                    .frame(width: 22 * level, height: 2)
+                    .frame(width: 22, alignment: .leading)
+                    .offset(y: 1)
+                    .opacity(hovering || level != 1 ? 1 : 0)
             }
-            .buttonStyle(.plain)
-            .help(sound.muted ? localized("Unmute") : localized("Mute"))
-            VolumeSlider(
-                value: Binding(get: { level }, set: { sound.setVolume($0) }),
-                range: 0...1,
-                tint: sound.muted ? Theme.tertiary : Theme.accent,
-                height: 4
+            .background(
+                RoundedRectangle(cornerRadius: Theme.controlRadius, style: .continuous)
+                    .fill(hovering ? Theme.surface : .clear)
             )
-            .frame(width: 110)
-            .disabled(!sound.volumeSettable)
-            Text("\(Int(level * 100))%")
-                .font(Theme.numeral(10.5, weight: .medium))
-                .foregroundStyle(Theme.secondary)
-                .frame(width: 32, alignment: .trailing)
-        }
-        // The system level changes from the keyboard too, so it is read while
-        // the panel is open.
-        .task {
-            while !Task.isCancelled {
-                sound.refresh()
-                try? await Task.sleep(for: .seconds(1))
+            .contentShape(Rectangle())
+            .onHover { hovering = $0 }
+            .onTapGesture {
+                sound.setMuted(!sound.muted)
+                HapticManager.play(.alignment)
             }
+            .overlay(ScrollCatcher { delta in
+                sound.setVolume(min(max(sound.volume + delta * 0.02, 0), 1))
+            })
+            .help("\(Int(level * 100))% · " + localized("Scroll to change, click to mute"))
+            .task {
+                // The level also moves from the keyboard; read it while open.
+                while !Task.isCancelled {
+                    sound.refresh()
+                    try? await Task.sleep(for: .seconds(1))
+                }
+            }
+    }
+
+    private var symbol: String {
+        if level == 0 { return "speaker.slash.fill" }
+        return level < 0.34 ? "speaker.wave.1.fill" : (level < 0.67 ? "speaker.wave.2.fill" : "speaker.wave.3.fill")
+    }
+}
+
+/// Reports vertical scrolling over a view, without taking clicks.
+private struct ScrollCatcher: NSViewRepresentable {
+    let onScroll: (Double) -> Void
+
+    func makeNSView(context: Context) -> NSView {
+        let view = CatcherView()
+        view.onScroll = onScroll
+        return view
+    }
+
+    func updateNSView(_ view: NSView, context: Context) {
+        (view as? CatcherView)?.onScroll = onScroll
+    }
+
+    final class CatcherView: NSView {
+        var onScroll: ((Double) -> Void)?
+        override func scrollWheel(with event: NSEvent) {
+            onScroll?(Double(event.scrollingDeltaY))
+        }
+        // Clicks and hovers pass through to the icon underneath.
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            NSApp.currentEvent?.type == .scrollWheel ? self : nil
         }
     }
 }
@@ -399,6 +418,8 @@ private struct Rail: View {
     let tabs: [NotchViewModel.Tab]
     /// -1 for the left rail, 1 for the right: which way the icons arrive from.
     let side: CGFloat
+    /// The right rail also carries the volume and keep-awake buttons.
+    var showsTools = false
 
     @State private var hovered: NotchViewModel.Tab?
     /// The active highlight is one view that moves between icons.
@@ -457,6 +478,11 @@ private struct Rail: View {
                         hovered = nil
                     }
                 }
+            }
+            if showsTools {
+                Capsule().fill(Color.white.opacity(0.1)).frame(width: 14, height: 1).padding(.vertical, 3)
+                RailVolume(sound: vm.sound)
+                CaffeineButton(caffeine: vm.caffeine)
             }
         }
         .frame(width: 30)

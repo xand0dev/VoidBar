@@ -89,17 +89,22 @@ final class TabManager: ObservableObject {
         configs.filter { $0.isEnabled }.map { $0.id }
     }
     
+    /// The right rail also holds the volume and keep-awake buttons, which count
+    /// as two places when the tabs are divided between the sides.
+    private static let toolSlots = 2
+
     var leftRail: [NotchViewModel.Tab] {
         let active = activeTabs
         if active.isEmpty { return [] }
-        let mid = Int(ceil(Double(active.count) / 2.0))
-        return Array(active.prefix(mid))
+        return Array(active.prefix(leftCount(of: active.count)))
     }
-    
+
     var rightRail: [NotchViewModel.Tab] {
         let active = activeTabs
-        if active.count <= 1 { return [] }
-        let mid = Int(ceil(Double(active.count) / 2.0))
-        return Array(active.suffix(from: mid))
+        return Array(active.suffix(from: min(leftCount(of: active.count), active.count)))
+    }
+
+    private func leftCount(of count: Int) -> Int {
+        min(count, Int(ceil(Double(count + Self.toolSlots) / 2.0)))
     }
 }
